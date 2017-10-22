@@ -2,7 +2,6 @@
 import numpy as np
 import math
 import scipy.stats as ss
-from helpers import *
 
 
 
@@ -17,19 +16,19 @@ def compute_loss(y, tx, w, cost = "mse", lambda_ = 0):
     You can calculate the loss using mse or mae.
     """
     N = tx.shape[0]
-    error_vec = y - tx.dot(w)
     if (cost == "mse"):
-        loss = (1 / (2*N)) * np.linalg.norm(error_vec)**2
+        return (1 / (2*N)) * np.linalg.norm(y - tx.dot(w))**2
     elif (cost == "mae"):
-        loss = (1 / N) * np.sum(np.abs(error_vec))
+        return (1 / N) * np.sum(np.abs(y - tx.dot(w)))
     elif (cost == "ridge"):
-        loss = (1 / (2*N)) * np.linalg.norm(y - tx.dot(w))**2 + lambda_ * np.linalg.norm(w)**2
+        return (1 / (2*N)) * np.linalg.norm(y - tx.dot(w))**2 + lambda_ * np.linalg.norm(w)**2
     elif (cost == "logistic"):
-        loss = np.sum(np.log(1 + np.exp(tx.dot(w))) - y * tx.dot(w))
+        return np.sum(np.log(1 + np.exp(tx.dot(w))) - y * tx.dot(w))
+    elif (cost == "reg_logistic"):
+        return np.sum(np.log(1 + np.exp(tx.dot(w))) - tx.dot(w) * y) + (lambda_ / 2) * np.linalg.norm(w)**2
     else:
-        print("Invalid cost argument in compute_loss")
-        raise IllegalArgument
-    return loss
+        raise IllegalArgument("Invalid cost argument in compute_loss")
+    return 0
 
 
 
@@ -54,88 +53,103 @@ def grid_search(y, tx, w0, w1):
 
 
 
-def compute_gradient(y, tx, w, cost = "mse"):
+def compute_gradient(y, tx, w, cost = "mse", lambda_ = 0):
     """Compute the gradient."""
     N = tx.shape[0];
-    error_vec = y - tx.dot(w)
     if (cost == "mse"):
-        grad = -(1/N) * np.transpose(tx).dot(error_vec)
+        return -(1/N) * np.transpose(tx).dot(y - tx.dot(w))
     elif (cost == "mae"):
         # Note that here it is not a gradient strictly speaking because the mae is not differentiable everywhere
+        error_vec = y - tx.dot(w)
         sub_grad = [0 if error_vec[i] == 0 else error_vec[i] / np.abs(error_vec[i]) for i in range(N)]
-        grad = -(1 / N) * np.transpose(tx).dot(sub_grad)
+        return -(1 / N) * np.transpose(tx).dot(sub_grad)
+    elif (cost == "ridge"):
+        return -(1/N) * np.transpose(tx).dot(y - tx.dot(w)) + 2 * lambda_ * w
     elif (cost == "logistic"):
         try:
             w.shape[1]
         except IndexError:
             w = np.expand_dims(w, 1)
-        grad = np.transpose(tx).dot(sigmoid(tx.dot(w)) - y)
+        return np.transpose(tx).dot(sigmoid(tx.dot(w)) - y)
+    elif (cost == "reg_logistic"):
+        try:
+            w.shape[1]
+        except IndexError:
+            w = np.expand_dims(w, 1)
+        return np.transpose(tx).dot(sigmoid(tx.dot(w)) - y) + lambda_ * w
     else:
-        print("Invalid argument in compute_gradient function.")
-        raise IllegalArgument
-    return grad
+        raise IllegalArgument("Invalid cost argument in compute_gradient function.")
+    return 0
 
 
 
 
 # Be careful, gamma of 2 for MSE doesn't converge
-def gradient_descent(y, tx, initial_w, max_iters, gamma, cost ="mse", tol = 1e-6, thresh_test_conv = 10):
+def gradient_descent(y, tx, initial_w, max_iters, gamma, cost ="mse", lambda_ = 0, tol = 1e-6, thresh_test_div = 10, update_gamma = False):
     """Gradient descent algorithm."""
-    if (cost not in ["mse", "mae", "logistic"]):
-        raise IllegalArgument
+    if (cost not in ["mse", "mae", "logistic", "reg_logistic", "ridge"]):
+        raise IllegalArgument("Invalid cost argument in gradient_descent function")
+    
+    # convert w to a numpy array if it is passed as a list
+    if (type(initial_w) != np.ndarray):
+        initial_w = np.array(initial_w)
     
     # ensure that w_initial is formatted in the right way if implementing logistic regression
-    if (cost == "logistic"):
+    if (cost == "logistic" or cost == "reg_logistic"):
         try:
             initial_w.shape[1]
         except IndexError:
             initial_w = np.expand_dims(initial_w, 1)
+    
         
     # Define parameters to store w and loss
-    ws = [initial_w]
-    initial_loss = compute_loss(y, tx, initial_w, cost)
-    losses = [initial_loss]
-    w = initial_w
-    test_conv = 0
+    loss_k = compute_loss(y, tx, initial_w, cost = cost, lambda_ = lambda_)
+    w_k = initial_w
+    
+    # test_div is an integer that is incremented for each consecutive increase in loss.
+    # If test_div reaches thresh_test_div the programm stops and divergence is assumed
+    test_div = 0
     dist_succ_loss = tol + 1
     n_iter = 0;
     
     while (n_iter < max_iters and dist_succ_loss > tol):
-        grad = compute_gradient(y, tx, w, cost)
-        loss = compute_loss(y, tx, w, cost)
+        grad = compute_gradient(y, tx, w_k, cost = cost, lambda_ = lambda_)
         
         # updating w
-        w = w - gamma * grad
-        loss = compute_loss(y, tx, w, cost)
+        w_kp1 = w_k - gamma * grad
+        loss_kp1 = compute_loss(y, tx, w_kp1, cost = cost, lambda_ = lambda_)
         
         # Test of divergence, test_conv counts the number of consecutive iterations for which loss has increased
-        if (loss > losses[n_iter]):
-            test_conv += 1
-            if (test_conv >= thresh_test_conv):
+        if (loss_kp1 > loss_k):
+            test_div += 1
+            if (test_div >= thresh_test_div):
                 print("Stopped computing because 10 consecutive iterations have involved an increase in loss.")
                 return losses, ws
         else:
-            test_conv = 0
-
-        # store w and loss
-        ws.append(w)
-        losses.append(loss)
-        #print("loss:", losses)
+            test_div = 0
      
         # update distance between two successive w
-        dist_succ_loss = np.abs(losses[-1] - losses[-2])
-        #print(dist_succ_loss)
+        dist_succ_loss = np.abs(loss_kp1 - loss_k)
         
         # update n_iter: number of iterations
         n_iter += 1
+        
+        w_k = w_kp1
+        loss_k = loss_kp1
+        
+        # update gamma if update_gamma is True
+        if (update_gamma == True):
+            gamma = (1 / (1 + n_iter)) * gamma
+    
+    # Printing the results
     try:
         initial_w.shape[1]
-        print("Gradient Descent({bi}/{ti}): loss={l}, w0={w0}, w1={w1}, cost: {cost}".format(
-              bi=n_iter-1, ti=max_iters - 1, l=loss, w0=w[0,0], w1=w[1,0], cost = cost))
-    except IndexError:
-        print("Gradient Descent({bi}/{ti}): loss={l}, w0={w0}, w1={w1}, cost: {cost}".format(
-                  bi=n_iter-1, ti=max_iters - 1, l=loss, w0=w[0], w1=w[1], cost = cost))
-    return losses, ws
+        print("GD({bi}/{ti}), cost: {cost}: loss={l}, w={w}".format(
+              bi=n_iter-1, ti=max_iters - 1, cost = cost, l=loss_k, w=w_k[:,0]))
+    except (IndexError, AttributeError):
+        print("GD({bi}/{ti}), cost: {cost}: loss={l}, w={w}".format(
+                  bi=n_iter-1, ti=max_iters - 1, cost = cost, l=loss_k, w=w_k))
+    return w_k, loss_k
 
 
 
@@ -147,18 +161,17 @@ def compute_stoch_gradient(y, tx, w, batch_size=1, cost ="mse"):
     batched = [x for x in batch_iter(y, tx, batch_size)][0]
     y_b = batched[0]
     tx_b = batched[1]
-    error_vec = y_b - tx_b.dot(w)
 
     if (cost == "mse"):
-        stoch_grad = (-2 / batch_size) * np.transpose(tx_b).dot(error_vec)
+        return(-1 / batch_size) * np.transpose(tx_b).dot(y_b - tx_b.dot(w))
     elif (cost == "mae"):
+        error_vec = y_b - tx_b.dot(w)
         sub_grad_abs = [0 if error_vec[i] == 0 else error_vec[i] / np.abs(error_vec[i]) for i in range(batch_size)]
-        stoch_grad = -(1 / batch_size) * np.transpose(tx_b).dot(sub_grad_abs)
+        return -(1 / batch_size) * np.transpose(tx_b).dot(sub_grad_abs)
     else:
-        print("Invalid cost argument in compute_stoch_gradient")
-        raise IllegalArgument
+        raise IllegalArgument("Invalid cost argument in compute_stoch_gradient")
     
-    return stoch_grad
+    return 0
 
 
 # batxh_iter is used to sample the training data used to compute the stochastic gradient
@@ -191,45 +204,63 @@ def batch_iter(y, tx, batch_size, num_batches=1, shuffle=True):
 
 
 def stochastic_gradient_descent(
-        y, tx, initial_w, batch_size, max_iters, gamma, cost = "mse", tol = 1e-6, thresh_test_conv = 100):
+        y, tx, initial_w, batch_size, max_iters, gamma, cost = "mse", tol = 1e-6, thresh_test_div = 100, update_gamma = False):
+    
+    if (cost not in ["mse", "mae"]):
+        raise IllegalArgument("Invalid cost argument in stochastic_gradient_descent function")
+    
+    # convert w to a numpy array if it is passed as a list
+    if (type(initial_w) != np.ndarray):
+        initial_w = np.array(initial_w)
+    
     # Define parameters to store w and loss
-    ws = [initial_w]
-    initial_loss = compute_loss(y, tx, initial_w, cost)
-    losses = [initial_loss]
-    w = initial_w
-    test_conv = 0
+    w_k = initial_w
+    loss_k = compute_loss(y, tx, w_k, cost)
+    
+    # test_conv is an integer that is incremented for each consecutive increase in loss.
+    # If test_conv reaches thresh_test_div the programm stops and divergence is assumed
+    test_div = 0
+    
     dist_succ_w = tol + 1
     n_iter = 0
     while (n_iter < max_iters and dist_succ_w > tol):
-        stoch_grad = compute_stoch_gradient(y, tx, w, batch_size, cost)
-        loss = compute_loss(y, tx, w, cost)
+        stoch_grad = compute_stoch_gradient(y, tx, w_k, batch_size, cost)
+        
+        # updating w
+        w_kp1 = w_k - gamma * stoch_grad
+        loss_kp1 = compute_loss(y, tx, w_kp1, cost)
         
         # Test of convergence, test_conv counts the number of consecutive iterations for which loss has increased
-        if (loss > losses[n_iter]):
-            test_conv += 1
-            if (test_conv == thresh_test_conv):
+        if (loss_kp1 > loss_k):
+            test_div += 1
+            if (test_div == thresh_test_div):
                 print("Stopped computing because 10 consecutive iterations have involved an increase in loss.")
                 return losses, ws
         else:
-            test_conv = 0
-        
-        # updating w
-        w = w - gamma * stoch_grad
-        
-        # store w and loss
-        ws.append(w)
-        losses.append(loss)
+            test_div = 0
         
         # computing distance between new w and former one
-        dist_succ_w = np.linalg.norm(ws[len(ws)-1] - ws[len(ws)-2])
+        dist_succ_w = np.linalg.norm(loss_kp1 - loss_k)
+        
+        w_k = w_kp1
+        loss_k = loss_kp1
         
         # updating the number of iteration
         n_iter += 1
+        
+        # update gamma if update_gamma is True
+        if (update_gamma == True):
+            gamma = (1 / (1 + n_iter)) * gamma
 
-    print("Gradient Descent({bi}/{ti}): loss={l}, w0={w0}, w1={w1}, cost: {cost}".format(
-              bi=n_iter-1, ti=max_iters - 1, l=loss, w0=w[0], w1=w[1], cost = cost))
+    try:
+        initial_w.shape[1]
+        print("SGD({bi}/{ti}), cost: {cost}: loss={l}, w={w}".format(
+              bi=n_iter-1, ti=max_iters - 1, cost = cost, l=loss_k, w=w_k[:,0]))
+    except (IndexError, AttributeError):
+        print("SGD({bi}/{ti}), cost: {cost}: loss={l}, w={w}".format(
+                  bi=n_iter-1, ti=max_iters - 1, cost = cost, l=loss_k, w=w_k))
     
-    return losses, ws
+    return w_k, loss_k
 
 
 
@@ -243,7 +274,7 @@ def least_squares(y, tx):
     w = np.linalg.solve(np.transpose(tx).dot(tx), np.transpose(tx).dot(y))
     loss = (1 / (2*N)) * np.linalg.norm(y - tx.dot(w))**2
     
-    return loss, w
+    return w, loss
 
 
 
@@ -311,8 +342,7 @@ def ridge_regression(y, tx, lambda_):
     I = np.diag(np.ones(D))
     w = np.linalg.solve(np.transpose(tx).dot(tx) + lambda_prime * I, np.transpose(tx).dot(y))
     loss = (1 / (2*N)) * np.linalg.norm(y - tx.dot(w))**2 + lambda_ * np.linalg.norm(w)**2
-    #loss = (1 / (2*N)) * np.linalg.norm(y - tx.dot(w))**2 + lambda_ * np.linalg.norm(w)**2
-    return loss, w
+    return w, loss
 
 
 
@@ -480,134 +510,100 @@ def sigmoid(t):
 
 
 
+def compute_hessian(y, tx, w, cost = "mse", lambda_ = 0):
+    N = tx.shape[0]
+    if (cost == "mse"):
+        return (1 / N) * np.transpose(tx).dot(tx)
+    elif (cost == "logistic"):
+        S_diag = sigmoid(tx.dot(w)) * (1 - sigmoid(tx.dot(w)))
+        S = np.diag(np.squeeze(S_diag))
+        return np.transpose(tx).dot(S).dot(tx)
+    elif (cost == "reg_logistic"):
+        D = tx.shape[1]
+        S_diag = sigmoid(tx.dot(w))
+        S = np.diag(np.squeeze(S_diag))
+        return np.transpose(tx).dot(S).dot(tx) + np.identity(D) * lambda_
+    else:
+        raise IllegalArgument("Invalid cost argument in compute_hessian")
+    return 0
 
 
 
 
-
-
-
-
-# TESTS #######################################################################################################################
-
-
-
-
-def test_ls_grid_GD_SGD():
-    height, weight, gender = load_data_from_ex02(sub_sample=False, add_outlier=False)
-    x, mean_x, std_x = standardize(height)
-    y, tx = build_model_data(x, weight)
+def newton(y, tx, initial_w, max_iters, gamma, cost ="mse", lambda_ = 0, tol = 1e-6, thresh_test_conv = 10, update_gamma = False):
+    """
+    Newton method.
+    Think to change the output to only return single values and not entire arrays
+    """
+    if (cost not in ["mse", "logistic", "reg_logistic"]):
+        raise IllegalArgument("Invalid cost argument in gradient_descent function")
     
-    ls_loss, ls_w = least_squares(y, tx)
+    # ensure that w_initial is formatted in the right way if implementing logistic regression
+    if (cost == "logistic" or cost == "reg_logistic"):
+        try:
+            initial_w.shape[1]
+        except IndexError:
+            initial_w = np.expand_dims(initial_w, 1)
     
-    w0_grid_test = np.linspace(-100, 100, 100)
-    w1_grid_test = np.linspace(-100, 100, 100)
-    grid_loss, grid_w = grid_search(y, tx, w0_grid_test, w1_grid_test)
-    
-    initial_w = [0, 0]
-    gamma_GD = 0.7
-    gamma_GD_mae = 10
-    max_iters = 500
-    GD_loss, GD_w = gradient_descent(y, tx, initial_w, max_iters, gamma_GD, cost='mse', tol=1e-2, thresh_test_conv=10)
-    GD_loss_mae, GD_w_mae = gradient_descent(y, tx, initial_w, max_iters, gamma_GD_mae, cost='mae', tol=1e-2, thresh_test_conv=10)
-
-    gamma_SGD = 0.1
-    gamma_SGD_mae = 2
-    max_iters = 100
-    batch_size = 200
-    SGD_loss, SGD_w = stochastic_gradient_descent(y, tx, initial_w, batch_size, max_iters, gamma_GD, cost='mse', tol=1e-2, thresh_test_conv=10)
-    SGD_loss_mae, SGD_w_mae = stochastic_gradient_descent(y, tx, initial_w, batch_size, max_iters, gamma_GD_mae, cost='mae', tol=1e-2, thresh_test_conv=10)
-    
-    
-    print("ls_w:", ls_w)
-    print("grid_w:", grid_w)
-    print("GD_w:", GD_w[len(GD_w)-1])
-    print("GD_w_mae:", GD_w_mae[len(GD_w_mae)-1])
-    print("SGD_w:", SGD_w[len(GD_w_mae)-1])
-    print("SGD_w_mae", SGD_w_mae[len(GD_w_mae)-1])
-    
-    return 0;
-
-
-
-
-
-
-# functions to test test_ls_grid_GD_SGD
-def load_data_from_ex02(sub_sample=True, add_outlier=False):
-    """Load data and convert it to the metrics system."""
-    path_dataset = "height_weight_genders.csv"
-    data = np.genfromtxt(
-        path_dataset, delimiter=",", skip_header=1, usecols=[1, 2])
-    height = data[:, 0]
-    weight = data[:, 1]
-    gender = np.genfromtxt(
-        path_dataset, delimiter=",", skip_header=1, usecols=[0],
-        converters={0: lambda x: 0 if b"Male" in x else 1})
-    # Convert to metric system
-    height *= 0.025
-    weight *= 0.454
-
-    # sub-sample
-    if sub_sample:
-        height = height[::50]
-        weight = weight[::50]
-
-    if add_outlier:
-        # outlier experiment
-        height = np.concatenate([height, [1.1, 1.2]])
-        weight = np.concatenate([weight, [51.5/0.454, 55.3/0.454]])
-
-    return height, weight, gender
-
-def standardize(x):
-    """Standardize the original data set."""
-    mean_x = np.mean(x)
-    x = x - mean_x
-    std_x = np.std(x)
-    x = x / std_x
-    return x, mean_x, std_x
-
-def build_model_data(height, weight):
-    """Form (y,tX) to get regression data in matrix form."""
-    y = weight
-    x = height
-    num_samples = len(y)
-    tx = np.c_[np.ones(num_samples), x]
-    return y, tx
-
-
-
-
-
-
-
-
-
-
-
-def train_test_split_demo(x, y, degree, ratio, seed):
-    """polynomial regression with different split ratios and different degrees."""
-    train_set, val_set = split_data(x, y, ratio, seed)
-    
-    x_train = train_set[0]
-    x_val = val_set[0]
-    
-    y_train = train_set[1]
-    y_val = val_set[1]
-    
-    tx_train = build_poly(x_train, degree)
-    tx_val = build_poly(x_val, degree)
         
-    loss, w = least_squares(y_train, tx_train)
+    # Define parameters to store w and loss
+    ws = [initial_w]
+    initial_loss = compute_loss(y, tx, initial_w, cost = cost, lambda_ = lambda_)
+    losses = [initial_loss]
+    w = initial_w
+    test_conv = 0
+    dist_succ_loss = tol + 1
+    n_iter = 0;
     
-    train_loss = compute_loss(y_train, tx_train, w, cost = "mse")
-    val_loss = compute_loss(y_val, tx_val, w, cost = "mse")
+    while (n_iter < max_iters and dist_succ_loss > tol):
+        grad = compute_gradient(y, tx, w, cost = cost, lambda_ = lambda_)
+        hess = compute_hessian(y, tx, w, cost = cost)
+        
+        # updating w
+        z = np.linalg.solve(hess, -gamma * grad)
+        w = z + w
+        loss = compute_loss(y, tx, w, cost = cost, lambda_ = lambda_)
+        
+        # Test of divergence, test_conv counts the number of consecutive iterations for which loss has increased
+        if (loss > losses[-1]):
+            test_conv += 1
+            if (test_conv >= thresh_test_conv):
+                print("Stopped computing because 10 consecutive iterations have involved an increase in loss.")
+                return losses, ws
+        else:
+            test_conv = 0
+
+        # store w and loss
+        ws.append(w)
+        losses.append(loss)
+     
+        # update distance between two successive w
+        dist_succ_loss = np.abs(losses[-1] - losses[-2])
+        
+        # update n_iter: number of iterations
+        n_iter += 1
+        
+        # update gamma if update_gamma is True
+        if (update_gamma == True):
+            gamma = 1 / (1 + n_iter) * gamma
     
-    rmse_tr = np.sqrt(2 * train_loss)
-    rmse_te = np.sqrt(2 * val_loss)
+    # Printing the results
+    try:
+        initial_w.shape[1]
+        print("Newton({bi}/{ti}): loss={l}, w0={w0}, w1={w1}, cost: {cost}".format(
+              bi=n_iter-1, ti=max_iters - 1, l=loss, w0=w[0,0], w1=w[1,0], cost = cost))
+    except (IndexError, AttributeError):
+        print("Newton({bi}/{ti}): loss={l}, w0={w0}, w1={w1}, cost: {cost}".format(
+                  bi=n_iter-1, ti=max_iters - 1, l=loss, w0=w[0], w1=w[1], cost = cost))
+    return losses, ws
 
-    print("proportion={p}, degree={d}, Training RMSE={tr:.3f}, Testing RMSE={te:.3f}".format(
-          p=ratio, d=degree, tr=rmse_tr, te=rmse_te))
 
 
+
+
+    
+    
+# EXCEPTIONS ##################################################################################################################
+    
+class IllegalArgument(Exception):
+    pass
