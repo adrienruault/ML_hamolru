@@ -48,7 +48,7 @@ def grid_search(y, tx, w0, w1):
     # best_i, best_j = np.unravel_index(np.argmin(losses), losses.shape)
 
     
-    return losses, [w0[best_i], w1[best_j]]
+    return [w0[best_i], w1[best_j]], losses
 
 
 
@@ -235,7 +235,7 @@ def stochastic_gradient_descent(
             test_div += 1
             if (test_div == thresh_test_div):
                 print("Stopped computing because 10 consecutive iterations have involved an increase in loss.")
-                return losses, ws
+                return w_kp1, loss_kp1
         else:
             test_div = 0
         
@@ -330,6 +330,34 @@ def split_data(x, y, ratio, seed=1):
     
     return [x_train, y_train], [x_val, y_val]
 
+
+
+
+
+
+def train_test_split_demo(x, y, degree, ratio, seed):
+    """polynomial regression with different split ratios and different degrees."""
+    train_set, val_set = split_data(x, y, ratio, seed)
+    
+    x_train = train_set[0]
+    x_val = val_set[0]
+    
+    y_train = train_set[1]
+    y_val = val_set[1]
+    
+    tx_train = build_poly(x_train, degree)
+    tx_val = build_poly(x_val, degree)
+        
+    loss, w = least_squares(y_train, tx_train)
+    
+    train_loss = compute_loss(y_train, tx_train, w, cost = "mse")
+    val_loss = compute_loss(y_val, tx_val, w, cost = "mse")
+    
+    rmse_tr = np.sqrt(2 * train_loss)
+    rmse_te = np.sqrt(2 * val_loss)
+
+    print("proportion={p}, degree={d}, Training RMSE={tr:.3f}, Testing RMSE={te:.3f}".format(
+          p=ratio, d=degree, tr=rmse_tr, te=rmse_te))
 
 
 
@@ -530,7 +558,7 @@ def compute_hessian(y, tx, w, cost = "mse", lambda_ = 0):
 
 
 
-def newton(y, tx, initial_w, max_iters, gamma, cost ="mse", lambda_ = 0, tol = 1e-6, thresh_test_conv = 10, update_gamma = False):
+def newton(y, tx, initial_w, max_iters, gamma, cost ="mse", lambda_ = 0, tol = 1e-6, thresh_test_div = 10, update_gamma = False):
     """
     Newton method.
     Think to change the output to only return single values and not entire arrays
@@ -547,38 +575,36 @@ def newton(y, tx, initial_w, max_iters, gamma, cost ="mse", lambda_ = 0, tol = 1
     
         
     # Define parameters to store w and loss
-    ws = [initial_w]
-    initial_loss = compute_loss(y, tx, initial_w, cost = cost, lambda_ = lambda_)
-    losses = [initial_loss]
-    w = initial_w
-    test_conv = 0
+    w_k = initial_w
+    loss_k = compute_loss(y, tx, w_k, cost = cost, lambda_ = lambda_)
+    
+    test_div = 0
     dist_succ_loss = tol + 1
     n_iter = 0;
-    
     while (n_iter < max_iters and dist_succ_loss > tol):
-        grad = compute_gradient(y, tx, w, cost = cost, lambda_ = lambda_)
-        hess = compute_hessian(y, tx, w, cost = cost)
+        grad = compute_gradient(y, tx, w_k, cost = cost, lambda_ = lambda_)
+        hess = compute_hessian(y, tx, w_k, cost = cost)
         
         # updating w
         z = np.linalg.solve(hess, -gamma * grad)
-        w = z + w
-        loss = compute_loss(y, tx, w, cost = cost, lambda_ = lambda_)
+        w_kp1 = z + w_k
+        loss_kp1 = compute_loss(y, tx, w_kp1, cost = cost, lambda_ = lambda_)
         
         # Test of divergence, test_conv counts the number of consecutive iterations for which loss has increased
-        if (loss > losses[-1]):
-            test_conv += 1
-            if (test_conv >= thresh_test_conv):
+        if (loss_kp1 > loss_k):
+            test_div += 1
+            if (test_div >= thresh_test_div):
                 print("Stopped computing because 10 consecutive iterations have involved an increase in loss.")
-                return losses, ws
+                return w_kp1, loss_kp1
         else:
-            test_conv = 0
+            test_div = 0
 
-        # store w and loss
-        ws.append(w)
-        losses.append(loss)
      
         # update distance between two successive w
-        dist_succ_loss = np.abs(losses[-1] - losses[-2])
+        dist_succ_loss = np.abs(loss_k - loss_kp1)
+        
+        w_k = w_kp1
+        loss_k = loss_kp1
         
         # update n_iter: number of iterations
         n_iter += 1
@@ -590,12 +616,12 @@ def newton(y, tx, initial_w, max_iters, gamma, cost ="mse", lambda_ = 0, tol = 1
     # Printing the results
     try:
         initial_w.shape[1]
-        print("Newton({bi}/{ti}): loss={l}, w0={w0}, w1={w1}, cost: {cost}".format(
-              bi=n_iter-1, ti=max_iters - 1, l=loss, w0=w[0,0], w1=w[1,0], cost = cost))
+        print("Newton({bi}/{ti}), cost: {cost}: loss={l}, w={w}".format(
+              bi=n_iter-1, ti=max_iters - 1, cost = cost, l=loss_k, w=w_k[:,0]))
     except (IndexError, AttributeError):
-        print("Newton({bi}/{ti}): loss={l}, w0={w0}, w1={w1}, cost: {cost}".format(
-                  bi=n_iter-1, ti=max_iters - 1, l=loss, w0=w[0], w1=w[1], cost = cost))
-    return losses, ws
+        print("Newton({bi}/{ti}), cost: {cost}: loss={l}, w={w}".format(
+                  bi=n_iter-1, ti=max_iters - 1, cost = cost, l=loss_k, w=w_k))
+    return w_k, loss_k
 
 
 

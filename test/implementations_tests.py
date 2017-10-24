@@ -26,7 +26,7 @@ def testing_ls_ridge():
         
     w0_grid_test = np.linspace(-100, 100, 100)
     w1_grid_test = np.linspace(-100, 100, 100)
-    grid_loss, grid_w = grid_search(y, tx, w0_grid_test, w1_grid_test)
+    grid_w, grid_loss = grid_search(y, tx, w0_grid_test, w1_grid_test)
     
     initial_w = [0, 0]
     gamma_GD = 0.7
@@ -59,6 +59,7 @@ def testing_ls_ridge():
     test_w_ls, test_loss_ls = least_squares(y, tx)
     test_w_ridge, test_loss_ridge = ridge_regression(y, tx, lambda_ridge)
 
+    print("Weights summary:")
     print("grid_w:", grid_w)
     print("GD_w:", GD_w)
     print("GD_w_mae:", GD_w_mae)
@@ -122,6 +123,7 @@ def testing_logistic():
     
     w_test_reg_log, loss_test_reg_log = reg_logistic_regression(y, tx, lambda_, initial_w, max_iters, gamma)
     
+    print("Weights summary:")
     print("w_logistic:", w_logistic[:,0])
     print("w_test_log:", w_test_log[:,0])
 

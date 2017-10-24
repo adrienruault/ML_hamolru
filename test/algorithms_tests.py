@@ -9,74 +9,51 @@ from utilities import *
 
 
 
-
-
-
-def train_test_split_demo(x, y, degree, ratio, seed):
-    """polynomial regression with different split ratios and different degrees."""
-    train_set, val_set = split_data(x, y, ratio, seed)
+def main():
+    test_ls_grid_GD_SGD()
+    test_newton_GD_reg_logistic()
     
-    x_train = train_set[0]
-    x_val = val_set[0]
-    
-    y_train = train_set[1]
-    y_val = val_set[1]
-    
-    tx_train = build_poly(x_train, degree)
-    tx_val = build_poly(x_val, degree)
-        
-    loss, w = least_squares(y_train, tx_train)
-    
-    train_loss = compute_loss(y_train, tx_train, w, cost = "mse")
-    val_loss = compute_loss(y_val, tx_val, w, cost = "mse")
-    
-    rmse_tr = np.sqrt(2 * train_loss)
-    rmse_te = np.sqrt(2 * val_loss)
-
-    print("proportion={p}, degree={d}, Training RMSE={tr:.3f}, Testing RMSE={te:.3f}".format(
-          p=ratio, d=degree, tr=rmse_tr, te=rmse_te))
-
-
-    
-
-
-
 
 
 
 
 def test_ls_grid_GD_SGD():
+    print()
+    print("BEGINNING OF TEST_LS_GRID_GD_SGD")
     height, weight, gender = load_data_from_ex02(sub_sample=False, add_outlier=False)
     x, mean_x, std_x = standardize(height)
     y, tx = build_model_data(x, weight)
     
-    ls_loss, ls_w = least_squares(y, tx)
+    ls_w, ls_loss = least_squares(y, tx)
     
     w0_grid_test = np.linspace(-100, 100, 100)
     w1_grid_test = np.linspace(-100, 100, 100)
-    grid_loss, grid_w = grid_search(y, tx, w0_grid_test, w1_grid_test)
+    grid_w, grid_loss = grid_search(y, tx, w0_grid_test, w1_grid_test)
     
     initial_w = np.array([0, 0])
     gamma_GD = 0.7
     gamma_GD_mae = 10
     max_iters = 500
-    GD_loss, GD_w = gradient_descent(y, tx, initial_w, max_iters, gamma_GD, cost='mse', tol=1e-2, thresh_test_conv=10)
-    GD_loss_mae, GD_w_mae = gradient_descent(y, tx, initial_w, max_iters, gamma_GD_mae, cost='mae', tol=1e-2, thresh_test_conv=10)
+    GD_w, GD_loss = gradient_descent(y, tx, initial_w, max_iters, gamma_GD, cost='mse', tol=1e-2, thresh_test_div=10)
+    GD_w_mae, GD_loss_mae = gradient_descent(y, tx, initial_w, max_iters, gamma_GD_mae, cost='mae', tol=1e-2, thresh_test_div=10)
 
     gamma_SGD = 0.1
     gamma_SGD_mae = 2
     max_iters = 100
     batch_size = 200
-    SGD_loss, SGD_w = stochastic_gradient_descent(y, tx, initial_w, batch_size, max_iters, gamma_GD, cost='mse', tol=1e-2, thresh_test_conv=10)
-    SGD_loss_mae, SGD_w_mae = stochastic_gradient_descent(y, tx, initial_w, batch_size, max_iters, gamma_GD_mae, cost='mae', tol=1e-2, thresh_test_conv=10)
+    SGD_w, SGD_loss = stochastic_gradient_descent(y, tx, initial_w, batch_size, max_iters, gamma_GD, cost='mse', tol=1e-2, thresh_test_div=10)
+    SGD_w_mae, SGD_loss_mae = stochastic_gradient_descent(y, tx, initial_w, batch_size, max_iters, gamma_GD_mae, cost='mae', tol=1e-2, thresh_test_div=10)
     
-    
+    print("Weights summary:")
     print("ls_w:", ls_w)
     print("grid_w:", grid_w)
-    print("GD_w:", GD_w[len(GD_w)-1])
-    print("GD_w_mae:", GD_w_mae[len(GD_w_mae)-1])
-    print("SGD_w:", SGD_w[len(GD_w_mae)-1])
-    print("SGD_w_mae", SGD_w_mae[len(GD_w_mae)-1])
+    print("GD_w:", GD_w)
+    print("GD_w_mae:", GD_w_mae)
+    print("SGD_w:", SGD_w)
+    print("SGD_w_mae", SGD_w_mae)
+    
+    print("END OF TEST_LS_GRID_GD_SGD")
+    print()
     
     return 0;
 
@@ -84,7 +61,12 @@ def test_ls_grid_GD_SGD():
 
     
     
-def test_newton_gradient_descent_reg_logistic():
+def test_newton_GD_reg_logistic():
+    
+    print()
+    print("BEGINNING OF TEST_NEWTON_GD_REG_LOGISTIC")
+    
+    
     # load data.
     height, weight, gender = load_data_from_ex02()
 
@@ -94,9 +76,6 @@ def test_newton_gradient_descent_reg_logistic():
     X = np.c_[height.reshape(-1), weight.reshape(-1)]
     y, X = sample_data(y, X, seed, size_samples=200)
     x, mean_x, std_x = standardize(X)
-    
-    print(y.shape)
-    print(x.shape)
     
     max_iter = 10000
     gamma_gd = 0.01
@@ -109,12 +88,22 @@ def test_newton_gradient_descent_reg_logistic():
     
     initial_w = np.zeros((tx.shape[1], 1))
     
-    loss, w = gradient_descent(y, tx, initial_w, max_iter, gamma_gd, cost='reg_logistic', lambda_=lambda_, tol=threshold, thresh_test_conv=10, update_gamma=False)
+    loss, w = gradient_descent(y, tx, initial_w, max_iter, gamma_gd, cost='reg_logistic', lambda_=lambda_, tol=threshold, thresh_test_div=10, update_gamma=False)
     
-    loss, w = newton(y, tx, initial_w, max_iter, gamma_newt, cost='reg_logistic', lambda_=lambda_, tol=threshold, thresh_test_conv=10, update_gamma=False)
+    loss, w = newton(y, tx, initial_w, max_iter, gamma_newt, cost='reg_logistic', lambda_=lambda_, tol=threshold, thresh_test_div=10, update_gamma=False)
+    
+    
+    print("END OF TEST_NEWTON_GD_REG_LOGISTIC")
+    print()
+    
     
     return 0
 
+
+
+
+if (__name__ == "__main__"):
+    main()
 
 
 
