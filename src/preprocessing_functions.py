@@ -75,3 +75,13 @@ def pass_data_to_minus_one_one(y):
             y_minus_one_one[i] = -1
     return y_minus_one_one
 
+def put_nan_to_mean(tx, y):
+    tx_nan_to_mean = tx
+    (tx_clean, y_clean) = get_clean_data(tx, y)
+    means = tx_clean.mean(axis=0)
+    for i in range(tx.shape[0]):
+        for j in range(tx.shape[1]):
+            if(tx[i,j] == -999.0):
+                tx_nan_to_mean[i,j] = means[j]
+    return tx_nan_to_mean
+
