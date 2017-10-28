@@ -22,21 +22,22 @@ def evaluate(tx,y,w):
                 false += 1
     return (true,false)
 
+def main():
+    (y, tx, event_ids) = utils.load_csv_data("../Data/train.csv")
 
-(y, tx, event_ids) = utils.load_csv_data("../train.csv")
+    std_tx = ML_alg.build_poly(prf.standardize(prf.put_nan_to_mean(tx,y)),degree=3)
 
-std_tx = ML_alg.build_poly(prf.standardize(prf.put_nan_to_mean(tx,y)),degree=3)
+    y_bin = prf.pass_data_to_zero_one(y)
 
-std_tx.mean()
+    initial_w = np.zeros([std_tx.shape[1],1])
 
-y_bin = prf.pass_data_to_zero_one(y)
-
-initial_w = np.zeros([std_tx.shape[1],1])
-
-(w, loss ) = ML_alg.gradient_descent(tx = std_tx, y = y_bin, initial_w = initial_w,cost = 'reg_logistic',
-                        lambda_= 0.5, gamma = 1e-7, update_gamma= False, max_iters = 10000)
+    (w, loss ) = ML_alg.stochastic_gradient_descent(tx = std_tx, y = y_bin, initial_w = initial_w,cost = 'reg_logistic',
+                          lambda_= 0.5, gamma = 1e-7, update_gamma= False, max_iters = 10000, batch_size = 1000)
 
 
-(true, false) = evaluate(std_tx, y_bin, w)
+    (true, false) = evaluate(std_tx, y_bin, w)
 
-print(true / (true + false))
+    print(true / (true + false))
+    
+if(__name__ == "__main__"):
+    main()

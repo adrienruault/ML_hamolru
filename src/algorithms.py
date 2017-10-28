@@ -156,7 +156,7 @@ def gradient_descent(y, tx, initial_w, max_iters, gamma, cost ="mse", lambda_ = 
 
 
 
-def compute_stoch_gradient(y, tx, w, batch_size=1, cost ="mse"):
+def compute_stoch_gradient(y, tx, w, batch_size=1, cost ="mse", lambda_=0):
     """Compute a stochastic gradient from just few examples n and their corresponding y_n labels."""
     batched = [x for x in batch_iter(y, tx, batch_size)][0]
     y_b = batched[0]
@@ -168,6 +168,12 @@ def compute_stoch_gradient(y, tx, w, batch_size=1, cost ="mse"):
         error_vec = y_b - tx_b.dot(w)
         sub_grad_abs = [0 if error_vec[i] == 0 else error_vec[i] / np.abs(error_vec[i]) for i in range(batch_size)]
         return -(1 / batch_size) * np.transpose(tx_b).dot(sub_grad_abs)
+    elif (cost == "reg_logistic"):
+        try:
+            w.shape[1]
+        except IndexError:
+            w = np.expand_dims(w, 1)
+        return np.transpose(tx_b).dot(sigmoid(tx_b.dot(w)) - y) + lambda_ * w
     else:
         raise IllegalArgument("Invalid cost argument in compute_stoch_gradient")
     
@@ -204,9 +210,9 @@ def batch_iter(y, tx, batch_size, num_batches=1, shuffle=True):
 
 
 def stochastic_gradient_descent(
-        y, tx, initial_w, batch_size, max_iters, gamma, cost = "mse", tol = 1e-6, thresh_test_div = 100, update_gamma = False):
+        y, tx, initial_w, batch_size, max_iters, gamma, cost = "mse", lambda_=0, tol = 1e-6, thresh_test_div = 100, update_gamma = False):
     
-    if (cost not in ["mse", "mae"]):
+    if (cost not in ["mse", "mae", "reg_logistic"]):
         raise IllegalArgument("Invalid cost argument in stochastic_gradient_descent function")
     
     # convert w to a numpy array if it is passed as a list
