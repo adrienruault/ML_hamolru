@@ -31,8 +31,8 @@ def main():
 
     initial_w = np.zeros([std_tx.shape[1],1])
 
-    (w, loss ) = ML_alg.stochastic_gradient_descent(tx = std_tx, y = y_bin, initial_w = initial_w,cost = 'reg_logistic',
-                          lambda_= 0.5, gamma = 1e-7, update_gamma= False, max_iters = 10000, batch_size = 1000)
+    (w, loss ) = ML_alg.gradient_descent_without_loss(tx = std_tx, y = y_bin, initial_w = initial_w,cost = 'reg_logistic',
+                          lambda_= 0.5, gamma = 1e-7, update_gamma= False, max_iters = 10000)#, batch_size = 1000)
 
 
     (true, false) = evaluate(std_tx, y_bin, w)
