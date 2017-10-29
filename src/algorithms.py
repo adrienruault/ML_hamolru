@@ -23,9 +23,23 @@ def compute_loss(y, tx, w, cost = "mse", lambda_ = 0):
     elif (cost == "ridge"):
         return (1 / (2*N)) * np.linalg.norm(y - tx.dot(w))**2 + lambda_ * np.linalg.norm(w)**2
     elif (cost == "logistic"):
-        return np.sum(np.log(1 + np.exp(tx.dot(w))) - y * tx.dot(w))
+        tx_dot_w = tx.dot(w)
+        log_1p_exp = np.empty((N,1))
+        for i in range(N):
+            if (1 + np.exp(tx_dot_w)[i] > 30):
+                log_1p_exp[i] = tx_dot_w[i]
+            else:
+                log_1p_exp[i] = np.log(1 + np.exp(tx_dot_w[i]))
+        return np.sum(log_1p_exp - y * tx_dot_w)
     elif (cost == "reg_logistic"):
-        return np.sum(np.log(1 + np.exp(tx.dot(w))) - tx.dot(w) * y) + (lambda_ / 2) * np.linalg.norm(w)**2
+        tx_dot_w = tx.dot(w)
+        log_1p_exp = np.empty((N,1))
+        for i in range(N):
+            if (tx_dot_w[i] > 30):
+                log_1p_exp[i] = tx_dot_w[i]
+            else:
+                log_1p_exp[i] = np.log(1 + np.exp(tx_dot_w[i]))
+        return np.sum(log_1p_exp - tx_dot_w * y) + (lambda_ / 2) * np.linalg.norm(w)**2
     else:
         raise IllegalArgument("Invalid cost argument in compute_loss")
     return 0
@@ -124,7 +138,7 @@ def gradient_descent(y, tx, initial_w, max_iters, gamma, cost ="mse", lambda_ = 
             test_div += 1
             if (test_div >= thresh_test_div):
                 print("Stopped computing because 10 consecutive iterations have involved an increase in loss.")
-                return loss_kp1, w_kp1
+                return w_kp1, loss_kp1
         else:
             test_div = 0
      
@@ -468,7 +482,7 @@ def cross_validation(y, x, k_indices, k, degree, lambda_ = 0, max_iters = 1000, 
     return train_loss, test_loss
 
 
-def tuner_degree_lambda(y, x, degree_min, degree_max, lambda_min = -4, lambda_max = 0, nb_lambda = 30, k_fold=4, seed=1, max_iters=1000, gamma=1, cost="mse", tol=1e-6, thresh_test_div=10, update_gamma=False):
+def tuner_degree_lambda(y, x, degree_min, degree_max, lambda_min = -4, lambda_max = 0, nb_lambda = 30, k_fold=4, seeds=[1], max_iters=1000, gamma=1, cost="mse", tol=1e-6, thresh_test_div=10, update_gamma=False):
     """
     degree_min is a vector that contains the minimum degree to investigate for each dimension of x
     degree_max is a vector that contains the maximum degree to investigate for each dimension of x
@@ -489,8 +503,7 @@ def tuner_degree_lambda(y, x, degree_min, degree_max, lambda_min = -4, lambda_ma
     return best_degree, best_lambda
     """
     lambdas = np.logspace(lambda_min, lambda_max, nb_lambda)
-    # split data in k fold
-    k_indices = build_k_indices(y, k_fold, seed)
+    
     
     dim = x.shape[1]
     
@@ -512,34 +525,47 @@ def tuner_degree_lambda(y, x, degree_min, degree_max, lambda_min = -4, lambda_ma
     curr_dim = 0
     fill_deg(degrees, left_index, right_index, curr_dim, deg_min_max)
     
-    min_rmse_te = math.inf
-    # degrees is the list of all the degree array that are tested
-    for deg in degrees:
-        # define lists to store the loss of training data and test data
-        for lambda_ in lambdas:
-            tmp_rmse_tr = []
-            tmp_rmse_te = []
-            for k in range(k_fold):
-                print(deg)
-                print("Lambda:", lambda_)
-                print("{k}/{k_fold}".format(k=k, k_fold=k_fold))
-                # The initial_w used to execute the gradient descent is defined in the cross_validation function
-                train_loss, test_loss = cross_validation(y, x, k_indices, k, deg, lambda_=lambda_, max_iters=max_iters, gamma=gamma, cost=cost, tol=tol, thresh_test_div=thresh_test_div, update_gamma=update_gamma)
-                tmp_rmse_tr += [np.sqrt(2 * train_loss)]
-                tmp_rmse_te += [np.sqrt(2 * test_loss)]
     
-            new_rmse_tr = sum(tmp_rmse_tr) / k_fold
-            new_rmse_te = sum(tmp_rmse_te) / k_fold
-            print("rmse_tr:", new_rmse_tr)
-            print("rmse_te:", new_rmse_te)
+    rmse_te = np.empty((len(seeds), len(degrees), len(lambdas)))
+    rmse_tr = np.empty((len(seeds), len(degrees), len(lambdas)))
+    
+    min_rmse_te = math.inf
+    for ind_seed, seed_elem in enumerate(seeds):
+        # split data in k fold
+        k_indices = build_k_indices(y, k_fold, seed_elem)
+        
+        # degrees is the list of all the degree array that are tested
+        for ind_deg, deg in enumerate(degrees):
+            # define lists to store the loss of training data and test data
+            for ind_lambda_, lambda_ in enumerate(lambdas):
+                tmp_rmse_tr = []
+                tmp_rmse_te = []
+                for k in range(k_fold):
+                    print(deg)
+                    print("Lambda:", lambda_)
+                    print("{k}/{k_fold}".format(k=k, k_fold=k_fold))
+                    # The initial_w used to execute the gradient descent is defined in the cross_validation function
+                    train_loss, test_loss = cross_validation(y, x, k_indices, k, deg, lambda_ = lambda_, max_iters = max_iters,\
+                                                             gamma = gamma, cost = cost, tol = tol, thresh_test_div = thresh_test_div,\
+                                                             update_gamma = update_gamma)
+                    tmp_rmse_tr += [np.sqrt(2 * train_loss)]
+                    tmp_rmse_te += [np.sqrt(2 * test_loss)]
 
-            if (new_rmse_te < min_rmse_te):
-                best_lambda = lambda_
-                best_degree = deg
-                min_rmse_te = new_rmse_te
-                min_rmse_tr = new_rmse_tr
+                rmse_tr[ind_seed, ind_deg, ind_lambda_] = sum(tmp_rmse_tr) / k_fold
+                rmse_te[ind_seed, ind_deg, ind_lambda_] = sum(tmp_rmse_te) / k_fold
+                print("rmse_tr:", rmse_tr[ind_seed, ind_deg, ind_lambda_])
+                print("rmse_te:", rmse_te[ind_seed, ind_deg, ind_lambda_])
 
-    return best_degree, best_lambda, min_rmse_te, min_rmse_tr
+                    
+    rmse_te_mean = np.mean(rmse_te, axis=0)
+    
+    best_index = np.argmin(rmse_te_mean)
+    best_ind_d = best_index // len(lambdas)
+    best_ind_lambda = best_index % len(lambdas)
+    best_degree = degrees[best_ind_d]
+    best_lambda = lambdas[best_ind_lambda]  
+                    
+    return (best_degree, best_ind_d), (best_lambda, best_ind_lambda), rmse_te, rmse_tr
 
 
         
