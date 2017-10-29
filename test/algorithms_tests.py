@@ -82,15 +82,16 @@ def test_newton_GD_reg_logistic():
     gamma_newt = 4.5
     lambda_ = 0.1
     threshold = 1e-8
+    thresh_test_div = 100
 
     # build tx
     tx = np.c_[np.ones((y.shape[0], 1)), x]
     
     initial_w = np.zeros((tx.shape[1], 1))
     
-    loss, w = gradient_descent(y, tx, initial_w, max_iter, gamma_gd, cost='reg_logistic', lambda_=lambda_, tol=threshold, thresh_test_div=10, update_gamma=False)
+    loss, w = gradient_descent(y, tx, initial_w, max_iter, gamma_gd, cost='reg_logistic', lambda_=lambda_, tol=threshold, thresh_test_div=thresh_test_div, update_gamma=False)
     
-    loss, w = newton(y, tx, initial_w, max_iter, gamma_newt, cost='reg_logistic', lambda_=lambda_, tol=threshold, thresh_test_div=10, update_gamma=False)
+    loss, w = newton(y, tx, initial_w, max_iter, gamma_newt, cost='reg_logistic', lambda_=lambda_, tol=threshold, thresh_test_div=thresh_test_div, update_gamma=False)
     
     
     print("END OF TEST_NEWTON_GD_REG_LOGISTIC")

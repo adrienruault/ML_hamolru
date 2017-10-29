@@ -1,5 +1,5 @@
 import numpy as np
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
 
 #Returns all the rows and the y values of the dataset that does not contains -999 values
 def get_clean_data(tx,y):
@@ -51,6 +51,7 @@ def differentiate_two_categories(tx, y):
 
 #Returns repartition histogram in function of a feature.
 #The histogram is normalized
+"""
 def plothisto(tx_m1, tx_p1, n_feature, save_path = 'None'):
     plt.figure(figsize=[7,7])
     plt.hist(tx_m1[:,n_feature], bins = 100, alpha=0.5, label = '-1', normed=True)
@@ -59,6 +60,7 @@ def plothisto(tx_m1, tx_p1, n_feature, save_path = 'None'):
     plt.title('feature ' + str(n_feature) + ' repartition')
     if (save_path != 'None'):
         plt.savefig(save_path + 'feature_' + str(n_feature) + '_repartition')
+"""
        
 
 def pass_data_to_zero_one(y):

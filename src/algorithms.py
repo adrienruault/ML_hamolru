@@ -1,8 +1,8 @@
 
 import numpy as np
 import math
-import scipy.stats as ss
-
+#import scipy.stats as ss
+#import scipy.special as sspec
 
 
 
@@ -24,21 +24,26 @@ def compute_loss(y, tx, w, cost = "mse", lambda_ = 0):
         return (1 / (2*N)) * np.linalg.norm(y - tx.dot(w))**2 + lambda_ * np.linalg.norm(w)**2
     elif (cost == "logistic"):
         tx_dot_w = tx.dot(w)
-        log_1p_exp = np.empty((N,1))
-        for i in range(N):
-            if (1 + np.exp(tx_dot_w)[i] > 30):
-                log_1p_exp[i] = tx_dot_w[i]
-            else:
-                log_1p_exp[i] = np.log(1 + np.exp(tx_dot_w[i]))
+        log_1p_exp = np.logaddexp(0, tx_dot_w)
+        #log_1p_exp = tx_dot_w
+        #log_1p_exp[log_1p_exp < 100] = np.log(1 + np.exp(log_1p_exp[log_1p_exp < 100]))        
+        #for i in range(N):
+        #    if (tx_dot_w[i] > 30):
+        #        log_1p_exp[i] = tx_dot_w[i]
+        #    else:
+        #        log_1p_exp[i] = np.log(1 + np.exp(tx_dot_w[i]))
         return np.sum(log_1p_exp - y * tx_dot_w)
+    
     elif (cost == "reg_logistic"):
         tx_dot_w = tx.dot(w)
-        log_1p_exp = np.empty((N,1))
-        for i in range(N):
-            if (tx_dot_w[i] > 30):
-                log_1p_exp[i] = tx_dot_w[i]
-            else:
-                log_1p_exp[i] = np.log(1 + np.exp(tx_dot_w[i]))
+        log_1p_exp = np.logaddexp(0, tx_dot_w)
+        #log_1p_exp[log_1p_exp < 100] = np.log(1 + np.exp(log_1p_exp[log_1p_exp < 100]))
+        #log_1p_exp = np.zeros((N,1))
+        #for i in range(N):
+        #    if (tx_dot_w[i] > 30):
+        #        log_1p_exp[i] = tx_dot_w[i]
+        #    else:
+        #        log_1p_exp[i] = np.log(1 + np.exp(tx_dot_w[i]))
         return np.sum(log_1p_exp - tx_dot_w * y) + (lambda_ / 2) * np.linalg.norm(w)**2
     else:
         raise IllegalArgument("Invalid cost argument in compute_loss")
@@ -99,7 +104,7 @@ def compute_gradient(y, tx, w, cost = "mse", lambda_ = 0):
 
 
 # Be careful, gamma of 2 for MSE doesn't converge
-def gradient_descent(y, tx, initial_w, max_iters, gamma, cost ="mse", lambda_ = 0, tol = 1e-6, thresh_test_div = 10, update_gamma = False):
+def gradient_descent(y, tx, initial_w, max_iters, gamma, cost ="mse", lambda_ = 0, tol = 1e-6, thresh_test_div = 100, update_gamma = False):
     """Gradient descent algorithm."""
     if (cost not in ["mse", "mae", "logistic", "reg_logistic", "ridge"]):
         raise IllegalArgument("Invalid cost argument in gradient_descent function")
@@ -131,13 +136,15 @@ def gradient_descent(y, tx, initial_w, max_iters, gamma, cost ="mse", lambda_ = 
         
         # updating w
         w_kp1 = w_k - gamma * grad
+        #print(np.linalg.norm(gamma * grad))
         loss_kp1 = compute_loss(y, tx, w_kp1, cost = cost, lambda_ = lambda_)
         
         # Test of divergence, test_conv counts the number of consecutive iterations for which loss has increased
         if (loss_kp1 > loss_k):
             test_div += 1
             if (test_div >= thresh_test_div):
-                print("Stopped computing because 10 consecutive iterations have involved an increase in loss.")
+                print("Stopped computing at iteration {n_iter}".format(n_iter = n_iter))
+                print("because {thresh_test_div} consecutive iterations have involved an increase in loss.".format(thresh_test_div = thresh_test_div))
                 return w_kp1, loss_kp1
         else:
             test_div = 0
@@ -653,8 +660,8 @@ def averaged_cross_validation_best_degree_lambda(y, x, degrees, k_fold, nb_seed 
 
 def sigmoid(t):
     """apply sigmoid function on t."""
-    return np.exp(t) / (1 + np.exp(t))
-
+    #return sspec.expit(t)
+    return 1 / (1 + np.exp(-t))
 
 
 
