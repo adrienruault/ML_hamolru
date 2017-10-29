@@ -127,13 +127,13 @@ def gradient_descent(y, tx, initial_w, max_iters, gamma, cost ="mse", lambda_ = 
     # test_div is an integer that is incremented for each consecutive increase in loss.
     # If test_div reaches thresh_test_div the programm stops and divergence is assumed
     test_div = 0
-    dist_succ_loss = tol + 1
+    dist_succ_loss = loss_k * tol + 1
     n_iter = 0;
     gamma_init = gamma
     
     c = 0.5
     
-    while (n_iter < max_iters and dist_succ_loss > tol):
+    while (n_iter < max_iters and dist_succ_loss > tol * loss_k):
         gamma = gamma_init
         
         grad = compute_gradient(y, tx, w_k, cost = cost, lambda_ = lambda_)
@@ -583,6 +583,10 @@ def tuner_degree_lambda(y, x, degree_min, degree_max, lambda_min = -4, lambda_ma
 
                     
     rmse_te_mean = np.mean(rmse_te, axis=0)
+    rmse_tr_mean = np.mean(rmse_tr, axis=0)
+    
+    rmse_te_std = np.std(rmse_te, axis = 0)
+    rmse_tr_std = np.std(rmse_tr, axis = 0)
     
     best_index = np.argmin(rmse_te_mean)
     best_ind_d = best_index // len(lambdas)
@@ -590,7 +594,7 @@ def tuner_degree_lambda(y, x, degree_min, degree_max, lambda_min = -4, lambda_ma
     best_degree = degrees[best_ind_d]
     best_lambda = lambdas[best_ind_lambda]  
                     
-    return (best_degree, best_ind_d), (best_lambda, best_ind_lambda), rmse_te, rmse_tr
+    return (best_degree, best_ind_d), (best_lambda, best_ind_lambda), (rmse_te_mean, rmse_te_std), (rmse_tr_mean, rmse_tr_std)
 
 
         
