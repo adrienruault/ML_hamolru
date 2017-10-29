@@ -36,7 +36,7 @@ def deg_min_max_generator_parallel(deg_min = 0, deg_max = 10):
 def target_func(inputs_min_max_deg, output):
     degree_min = inputs_min_max_deg[0]
     degree_max = inputs_min_max_deg[1]
-    seeds = range(100)
+    seeds = range(25)
     
     (y, x, event_ids) = utils.load_csv_data("../Data/train.csv")
     x_nan_to_mean = prf.put_nan_to_mean(x, y)
@@ -44,7 +44,7 @@ def target_func(inputs_min_max_deg, output):
     std_x = prf.standardize(x_nan_to_mean)
     
     answer = alg.tuner_degree_lambda(y = y_bin, x = std_x, degree_min = degree_min, degree_max = degree_max,\
-                                        lambda_min = -4, lambda_max = 0, nb_lambda = 30, k_fold = 4, seeds = seeds,\
+                                        lambda_min = 0, lambda_max = 0, nb_lambda = 1, k_fold = 4, seeds = seeds,\
                                         max_iters = 100000, gamma = 1e-5, cost = "reg_logistic", tol = 1e-4,\
                                         thresh_test_div=10, update_gamma=False)
     

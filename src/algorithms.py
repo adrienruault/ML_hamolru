@@ -54,7 +54,7 @@ def compute_loss(y, tx, w, cost = "mse", lambda_ = 0):
 
 
 
-def grid_search(y, tx, w0, w1):
+def grid_search(y, tx, w0, w1, cost = "mse", lambda_ = 0):
     """Algorithm for grid search."""
     losses = np.zeros((len(w0), len(w1)))
     for i in range(len(w0)):
@@ -64,9 +64,8 @@ def grid_search(y, tx, w0, w1):
     argmin_index = np.argmin(losses);
     best_i = argmin_index // len(w1)
     best_j = argmin_index % len(w1)
-    # best_i, best_j = np.unravel_index(np.argmin(losses), losses.shape)
-
     
+    # best_i, best_j = np.unravel_index(np.argmin(losses), losses.shape)
     return [w0[best_i], w1[best_j]], losses
 
 
@@ -130,12 +129,23 @@ def gradient_descent(y, tx, initial_w, max_iters, gamma, cost ="mse", lambda_ = 
     test_div = 0
     dist_succ_loss = tol + 1
     n_iter = 0;
+    gamma_init = gamma
+    
+    c = 0.5
     
     while (n_iter < max_iters and dist_succ_loss > tol):
+        gamma = gamma_init
+        
         grad = compute_gradient(y, tx, w_k, cost = cost, lambda_ = lambda_)
         
+        loss_wk_pdir = compute_loss(y, tx, w_k - gamma * grad, cost = cost, lambda_ = lambda_)
+        norm_grad_2 = np.linalg.norm(grad)**2
+        while (loss_wk_pdir > loss_k - c * gamma * norm_grad_2):
+            gamma = gamma / 100
+            loss_wk_pdir = compute_loss(y, tx, w_k - gamma * grad, cost = cost, lambda_ = lambda_)
         # updating w
         w_kp1 = w_k - gamma * grad
+            
         #print(np.linalg.norm(gamma * grad))
         loss_kp1 = compute_loss(y, tx, w_kp1, cost = cost, lambda_ = lambda_)
         
@@ -426,7 +436,7 @@ def build_k_indices(y, k_fold, seed):
 
 
 
-def cross_validation(y, x, k_indices, k, degree, lambda_ = 0, max_iters = 1000, gamma = 1, cost = "mse", tol = 1e-6, thresh_test_div = 10, update_gamma = False):
+def cross_validation(y, x, k_indices, k, degree, lambda_ = 0, max_iters = 1000, gamma = 1, cost = "mse", tol = 1e-6, thresh_test_div = 10, update_gamma = False, newton_flag = False):
     """
     k_indices is the a list whose row k is the set of indices corresponding to the kth partition of the data set
     k is the index indicating which partition of the dataset to use as a the testing set
@@ -469,8 +479,11 @@ def cross_validation(y, x, k_indices, k, degree, lambda_ = 0, max_iters = 1000, 
     
     elif (cost == "logistic"):
         initial_w = np.zeros((tx_train.shape[1], 1))
+        if (newton_flag == True):
+            w_opti, logistic_loss = newton(y_train, tx_train, initial_w, max_iters, gamma, cost='logistic', tol=tol, thresh_test_div=thresh_test_div, update_gamma=update_gamma)
+        else:
+            w_opti, logistic_loss = gradient_descent(y_train, tx_train, initial_w, max_iters, gamma, cost='logistic', tol=tol, thresh_test_div=thresh_test_div, update_gamma=update_gamma)
             
-        w_opti, logistic_loss = gradient_descent(y_train, tx_train, initial_w, max_iters, gamma, cost='logistic', tol=tol, thresh_test_div=thresh_test_div, update_gamma=update_gamma)
         train_loss = compute_loss(y_train, tx_train, w_opti, cost = 'logistic')
         test_loss = compute_loss(y_test, tx_test, w_opti, cost = 'logistic')
         return train_loss, test_loss
@@ -478,8 +491,12 @@ def cross_validation(y, x, k_indices, k, degree, lambda_ = 0, max_iters = 1000, 
     
     elif (cost == "reg_logistic"):
         initial_w = np.zeros((tx_train.shape[1], 1))
+        
+        if (newton_flag == True):
+            w_opti, logistic_loss = newton(y_train, tx_train, initial_w, max_iters, gamma, cost='reg_logistic', tol=tol, thresh_test_div=thresh_test_div, update_gamma=update_gamma)
+        else:
+            w_opti, reg_logistic_loss = gradient_descent(y_train, tx_train, initial_w, max_iters, gamma, cost='reg_logistic', lambda_=lambda_, tol=tol, thresh_test_div=thresh_test_div, update_gamma=update_gamma)
             
-        w_opti, reg_logistic_loss = gradient_descent(y_train, tx_train, initial_w, max_iters, gamma, cost='reg_logistic', lambda_=lambda_, tol=tol, thresh_test_div=thresh_test_div, update_gamma=update_gamma)
         train_loss = compute_loss(y_train, tx_train, w_opti, cost = "logistic")
         test_loss = compute_loss(y_test, tx_test, w_opti, cost = "logistic")
         return train_loss, test_loss
@@ -538,6 +555,7 @@ def tuner_degree_lambda(y, x, degree_min, degree_max, lambda_min = -4, lambda_ma
     
     min_rmse_te = math.inf
     for ind_seed, seed_elem in enumerate(seeds):
+        print("# SEED :", ind_seed, "##############################################################")
         # split data in k fold
         k_indices = build_k_indices(y, k_fold, seed_elem)
         
