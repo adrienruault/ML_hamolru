@@ -546,7 +546,7 @@ def tuner_degree_lambda(y, x, degree_min, degree_max, lambda_min = -4, lambda_ma
         
 def fill_deg(A, left, right, curr_dim, deg_min_max):
     """
-    Function that output 
+    Function that outputs a matrix whose rows are every degree combination to test
     """
     if (curr_dim < A.shape[1]):
         
