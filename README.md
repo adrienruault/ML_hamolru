@@ -21,10 +21,15 @@ Put the train.csv and test.csv in the data folder.
 Contains all 6 methods:
 
 least_squares_GD : (Linear Regression using Gradient Descent)
+
 least_squares_SGD : (Linear Regression using Stochastic Gradient Descent)
-least_squares : (Linear Regression using Normal Equations.)
+
+least_squares : (Linear Regression using Normal Equations)
+
 ridge_regression : (Ridge Regression using Normal Equations)
+
 logistic_regression : (Logistic Regression using Gradient Descent)
+
 reg_logistic_regression : (Regularized Logistic Regression using Gradient Descent)
 
 
@@ -45,7 +50,9 @@ Contains utilitary functions such as build_poly to create the polynomials used f
 ### Group members:
 
 Skander Hajri
+
 Guillaume Mollard
+
 Adrien Ruault
 
 ### Team name on Kaggle : "?"
