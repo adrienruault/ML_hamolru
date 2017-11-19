@@ -1,8 +1,8 @@
 # ML_hamolru
 
-This is a git repository meant to contain the projects implementations of the Machine Learning course at EPFL.
-
+Repository for Machine Learning projects.
 Group members:
 - Skander Hajri
 - Guillaume Mollard
 - Adrien Ruault
+

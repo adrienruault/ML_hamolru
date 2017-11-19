@@ -84,10 +84,14 @@ def parallel_tuner():
         file_i = open("tuning_dim_{i}.txt".format(i=i), 'w')
         file_i.write("Best degree:", result_i[0][0], "with index:", result_i[0][1])
         file_i.write("Best lambda:", result_i[1][0], "with index:", result_i[1][1])
-        file_i.write("\nrmse_te:")
-        file_i.write(result_i[2])
-        file_i.write("\nrmse_tr:")
-        file_i.write(result_i[3])
+        file_i.write("\nmean_rmse_te:")
+        file_i.write(result_i[2][0])
+        file_i.write("std_rmse_te:")
+        file_i.write(result_i[2][1])
+        file_i.write("\nmean_rmse_tr:")
+        file_i.write(result_i[3][0])
+        file_i.write("std_rmse_tr:")
+        file_i.write(result_i[3][1])
         file_i.close()
     
     
