@@ -19,8 +19,10 @@ NUM_CHANNELS = 3
 # To be changed to 1
 BATCH_SIZE = 1
 
-TRAIN_SIZE = 20
+TRAIN_SIZE = 5
 TEST_SIZE = 10
+
+MODEL = 0
 
 data = pre.load_images("data/training/images/", TRAIN_SIZE)
 labels = pre.load_groundtruths("data/training/groundtruth/", TRAIN_SIZE)
@@ -83,7 +85,7 @@ def bn_conv_relu(x, in_channels=64, out_channels=64): # By default 64.
     return relu
 
 
-def bn_upconv_relu(x, in_channels=64, upscale_factor=1): # By default 64.
+def bn_upconv_relu(x, in_channels=64, upscale_factor=2): # By default 64.
     bn = batchnorm2d(x, in_channels, False)
     conv = upsample_layer(bn, in_channels, upscale_factor)
     relu = tf.nn.relu(tf.nn.bias_add(conv, tf.Variable(tf.truncated_normal([in_channels]))))
@@ -130,6 +132,7 @@ def get_bilinear_filter(filter_shape, upscale_factor):
         weights[:, :, i, i] = bilinear
     init = tf.constant_initializer(value=weights,
                                    dtype=tf.float32)
+
 
     bilinear_weights = tf.get_variable(name="decon_bilinear_filter", initializer=init,
                                        shape=weights.shape)
@@ -194,7 +197,7 @@ def FCN_model(data):
     # dropout = tf.nn.dropout(fc, KEEP_RATE)
     #
     # output = tf.matmul(dropout, weights['out'] + biases['out'])
-
+    MODEL = OUTPUT
     return output
 
 
@@ -238,8 +241,10 @@ def train_neural_network(x):
 
         correct = tf.equal(tf.argmax(prediction, 1), tf.argmax(y, 1))
 
-        output = sess.run(FCN_model(data[:1]))
-        Image.fromarray(output).convert("RGBA").save("result.png")
+
+        output = sess.run(tf.constant(data[:1]))
+
+        Image.fromarray(output[0]).convert("RGBA").save("result.png")
         accuracy = tf.reduce_mean(tf.cast(correct, 'float'))
         print('Accuracy:', accuracy.eval({x:data[:1], y:labels[:1]}))
 
