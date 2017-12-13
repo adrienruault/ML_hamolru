@@ -9,14 +9,14 @@ def load_images(folder_path, num_images):
     """Extract the images into a 4D tensor [image index, y, x, channels].
         Indices are from 0.
         Values are rescaled from [0, 255] down to [-0.5, 0.5]. """
-    imgs = np.zeros(shape=[num_images, 40, 40, 3])
+    imgs = np.zeros(shape=[num_images, 400, 400, 3])
     for i in range(1, num_images + 1):
         image_name = "satImage_%.3d" % i
         image_path = folder_path + image_name + ".png"
         if os.path.isfile(image_path):
             print('Loading ' + image_path)
             img = mpimg.imread(image_path)
-            imgs[i - 1] = np.asarray(img[:40,:40,:]).reshape(40, 40, 3)
+            imgs[i - 1] = np.asarray(img).reshape(400, 400, 3)
         else:
             print('File ' + image_path + ' does not exist')
     return imgs

@@ -8,8 +8,8 @@ from random import shuffle
 NUM_CLASSES = 2
 
 # To be changed to 400, 400
-IMG_WIDTH = 40
-IMG_HEIGHT = 40
+IMG_WIDTH = 400
+IMG_HEIGHT = 400
 
 NUM_EPOCHS = 2
 
@@ -93,13 +93,13 @@ def bn_upconv_relu(x, in_channels=64, upscale_factor=1): # By default 64.
 def upsample_layer(bottom,
                    n_channels, upscale_factor):
     kernel_size = 3 #2 * upscale_factor - upscale_factor % 2
-    stride = 2 #upscale_factor
+    stride = upscale_factor #upscale_factor
     strides = [1, stride, stride, 1]
     with tf.variable_scope("upconv"):
         # Shape of the bottom tensor
         in_shape = tf.shape(bottom)
-        h = ((in_shape[1] - 1) * stride) + 1
-        w = ((in_shape[2] - 1) * stride) + 1
+        h = ((in_shape[1] - 1) * stride) + 2
+        w = ((in_shape[2] - 1) * stride) + 2
         new_shape = [in_shape[0], h, w, n_channels]
         output_shape = tf.stack(new_shape)
         filter_shape = [kernel_size, kernel_size, n_channels, n_channels]
@@ -238,8 +238,12 @@ def train_neural_network(x):
 
         correct = tf.equal(tf.argmax(prediction, 1), tf.argmax(y, 1))
 
+        output = sess.run(FCN_model(data[:1]))
+        Image.fromarray(output).convert("RGBA").save("result.png")
         accuracy = tf.reduce_mean(tf.cast(correct, 'float'))
-        print('Accuracy:', accuracy.eval({x:data[0], y:labels[0]}))
+        print('Accuracy:', accuracy.eval({x:data[:1], y:labels[:1]}))
+
+
 
 
 def main():
