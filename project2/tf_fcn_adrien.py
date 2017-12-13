@@ -1,28 +1,37 @@
 
-
+import preprocessing
 import tensorflow as tf
-from tensorflow.examples.tutorials.mnist import input_data
-mnist = input_data.read_data_sets("/tmp/data/", one_hot = True)
+#from tensorflow.examples.tutorials.mnist import input_data
+import random
+#mnist = input_data.read_data_sets("/tmp/data/", one_hot = True)
 
 # To be changed to 2
-NUM_CLASSES = 10
+NUM_CLASSES = 2
 
 # To be changed to 400, 400
-IMG_WIDTH = 28
-IMG_HEIGHT = 28
+IMG_WIDTH = 400
+IMG_HEIGHT = 400
 
 NUM_EPOCHS = 2
 
 # To be changed to 3
-NUM_CHANNELS = 1
+NUM_CHANNELS = 3
 
 # To be changed to 1
 BATCH_SIZE = 128
 
+TRAIN_SIZE = 20
+TRAIN_PATH = './training/training/'
+LABEL_PATH = './training/images/'
+
+SEED = 1
+
+random.seed(SEED)
+
 
 # These values need to be fed in the sess.run() function using feed_dict
-x = tf.placeholder('float', [None, 784])
-y = tf.placeholder('float')
+x = tf.placeholder(tf.float32, shape=[None, IMG_WIDTH, IMG_HEIGHT, 3], name="input_image")
+y = tf.placeholder(tf.int32, shape=[None, IMG_WIDTH, IMG_HEIGHT, 1], name="annotation")
 
 
 def conv2d(x, W):
@@ -43,6 +52,7 @@ KEEP_PROB = tf.placeholder(tf.float32)
 # applied on a 4D numpy array with [image index, IMAGE_WIDTH, IMAGE_HEIGHT, CHANNEL]
 def FCN_model(data):
 
+    print('data shape:', data.shape)
     # Could use tf.truncated_normal() instead of tf.random_normal(),
     # see what is the best choice
     # note tf.truncated() is used in the FCN implementation
@@ -76,25 +86,43 @@ def FCN_model(data):
 
     dropout = tf.nn.dropout(fc, KEEP_RATE)
 
-    output = tf.matmul(fc, weights['out'] + biases['out'])
+    output = tf.matmul(dropout, weights['out'] + biases['out'])
 
     return output
+
+
+
+
 
 def train_neural_network(x):
     # the prediction variable is often called logits in tensor flow vocabulary
     prediction = FCN_model(x)
-    cost = tf.reduce_mean( tf.nn.softmax_cross_entropy_with_logits(logits = prediction, labels = y) )
+
+    print('prediction shape', prediction.shape)
+    #cost = tf.reduce_mean( tf.nn.softmax_cross_entropy_with_logits(logits = prediction, labels = y) )
+    cost = tf.reduce_mean((tf.nn.sparse_softmax_cross_entropy_with_logits(logits=prediction,
+                                                                        labels=tf.squeeze(y, squeeze_dims=[3]),
+                                                                        name="entropy")))
     optimizer = tf.train.AdamOptimizer().minimize(cost)
+
+    # Loading train with labels
+    img_train_list = preprocessing.load_images(TRAIN_PATH, TRAIN_SIZE)
+    label_train_list = preprocessing.load_groundtruths(LABEL_PATH, TRAIN_SIZE)
+
+    batch_idx = range(int(TRAIN_SIZE / BATCH_SIZE))
 
     hm_epochs = NUM_EPOCHS
     with tf.Session() as sess:
+        # initialization of the variables (eg: truncated normal)
         sess.run(tf.global_variables_initializer())
 
         for epoch in range(hm_epochs):
+            epoch_batch_idx = random.shuffle(batch_idx)
             epoch_loss = 0
-            for _ in range(int(mnist.train.num_examples/BATCH_SIZE)):
+            for batch in range(int(NUM_IMAGES_TRAIN/BATCH_SIZE)):
                 # feeding epoch_x and epoch_y for training current batch (to replace with our own )
-                epoch_x, epoch_y = mnist.train.next_batch(BATCH_SIZE)
+                epoch_x = img_train_list[batch_idx[batch]]
+                epoch_y = label_train_list[batch_idx[batch]]
                 _, c = sess.run([optimizer, cost], feed_dict={x: epoch_x, y: epoch_y})
                 epoch_loss += c
 
