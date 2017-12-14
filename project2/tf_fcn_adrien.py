@@ -30,8 +30,8 @@ random.seed(SEED)
 
 
 # These values need to be fed in the sess.run() function using feed_dict
-x = tf.placeholder(tf.float32, shape=[None, IMG_WIDTH, IMG_HEIGHT, 3], name="input_image")
-y = tf.placeholder(tf.int32, shape=[None, IMG_WIDTH, IMG_HEIGHT, 1], name="annotation")
+x = tf.placeholder(tf.float32, shape=[BATCH_SIZE, IMG_WIDTH, IMG_HEIGHT, 3], name="input_image")
+y = tf.placeholder(tf.int32, shape=[BATCH_SIZE, IMG_WIDTH, IMG_HEIGHT, 1], name="annotation")
 
 
 def conv2d(x, W):
@@ -56,16 +56,33 @@ def FCN_model(data):
     # Could use tf.truncated_normal() instead of tf.random_normal(),
     # see what is the best choice
     # note tf.truncated() is used in the FCN implementation
-    weights = {'W_conv1': tf.Variable(tf.truncated_normal([5, 5, NUM_CHANNELS, 32])),
-               'W_conv2': tf.Variable(tf.truncated_normal([5, 5, 32, 64])),
+    weights = {'W_conv1_1': tf.Variable(tf.truncated_normal([3, 3, NUM_CHANNELS, 64])),
+               'W_conv1_2': tf.Variable(tf.truncated_normal([3, 3, 64, 64])),
+               'W_conv2_1': tf.Variable(tf.truncated_normal([3, 3, 64, 64])),
+               'W_conv2_2': tf.Variable(tf.truncated_normal([3, 3, 64, 64])),
+               'W_conv3_1': tf.Variable(tf.truncated_normal([3, 3, 64, 64])),
+               'W_conv3_2': tf.Variable(tf.truncated_normal([3, 3, 64, 64])),
+               'W_conv4_1': tf.Variable(tf.truncated_normal([3, 3, 64, 64])),
+               'W_conv4_2': tf.Variable(tf.truncated_normal([3, 3, 64, 64])),
+               'W_conv5_1': tf.Variable(tf.truncated_normal([3, 3, 64, 64])),
+               'W_conv5_2': tf.Variable(tf.truncated_normal([3, 3, 64, 64])),
+               'W_conv6': tf.Variable(tf.truncated_normal([3, 3, 64, 64])),
+               'W_conv7': tf.Variable(tf.truncated_normal([3, 3, 64, 64])),
                # Number of pools done until now: 2 -> image size is (IMG_WIDTH / 4 * IMG_HEIGHT / 4)
-               'W_fc': tf.Variable(tf.truncated_normal([int(IMG_WIDTH / 4 * IMG_HEIGHT / 4) * 64, 1024])), # 7*7*64 is the dimension of the lower layer after reshaping (28 by 28 images)
                'out': tf.Variable(tf.truncated_normal([1024, NUM_CLASSES]))}
 
-    biases = {'B_conv1': tf.Variable(tf.truncated_normal([32])),
-               'B_conv2': tf.Variable(tf.truncated_normal([64])),
-               'B_fc': tf.Variable(tf.truncated_normal([1024])), # 7*7*64 is the dimension of the lower layer after reshaping (28 by 28 images)
-               'out': tf.Variable(tf.truncated_normal([NUM_CLASSES]))}
+    biases = {'B_conv1_1': tf.Variable(tf.truncated_normal([3, 3, NUM_CHANNELS, 64])),
+              'B_conv1_2': tf.Variable(tf.truncated_normal([3, 3, 64, 64])),
+              'B_conv2_1': tf.Variable(tf.truncated_normal([3, 3, 64, 64])),
+              'B_conv2_2': tf.Variable(tf.truncated_normal([3, 3, 64, 64])),
+              'B_conv3_1': tf.Variable(tf.truncated_normal([3, 3, 64, 64])),
+              'B_conv3_2': tf.Variable(tf.truncated_normal([3, 3, 64, 64])),
+              'B_conv4_1': tf.Variable(tf.truncated_normal([3, 3, 64, 64])),
+              'B_conv4_2': tf.Variable(tf.truncated_normal([3, 3, 64, 64])),
+              'B_conv5_1': tf.Variable(tf.truncated_normal([3, 3, 64, 64])),
+              'B_conv5_2': tf.Variable(tf.truncated_normal([3, 3, 64, 64])),
+              'B_conv6': tf.Variable(tf.truncated_normal([3, 3, 64, 64])),
+              'B_conv7': tf.Variable(tf.truncated_normal([3, 3, 64, 64])),}
 
     # IMPORTANT STEP
     # From FCN implementation:
@@ -81,10 +98,7 @@ def FCN_model(data):
     relu2 = tf.nn.relu(tf.nn.bias_add(conv2, biases['B_conv2']))
     pool2 = maxpool2d(conv2)
 
-    fc = tf.reshape(pool2, [-1, int(IMG_WIDTH / 4 * IMG_HEIGHT / 4) * 64])
-    fc = tf.nn.relu(tf.matmul(fc, weights['W_fc'] + biases['B_fc']))
-
-    dropout = tf.nn.dropout(fc, KEEP_RATE)
+    dropout = tf.nn.dropout(pool2, KEEP_RATE)
 
     output = tf.matmul(dropout, weights['out'] + biases['out'])
 

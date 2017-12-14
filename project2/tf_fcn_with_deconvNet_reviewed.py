@@ -23,8 +23,7 @@ BATCH_SIZE = 1
 TRAIN_SIZE = 20
 TEST_SIZE = 10
 
-MODEL = 0
-
+LEARNING_RATE = 1e-4
 
 #test_data  = pre.load_images("./data/test_set_images/")
 
@@ -174,7 +173,12 @@ def main(argv=None):
     # SESSION RUN OPERATION
     # Is AdamOptimizer the best choice, they use MomentumOptimizer in the template
     # Apparently: Adam optimizer requires less parameter tuning to get good results
-    optimizer_op = tf.train.AdamOptimizer().minimize(cost_op)
+    optimizer_op = tf.train.AdamOptimizer(LEARNING_RATE).minimize(cost_op)
+    #trainable_var = tf.trainable_variables()
+    #optimizer_op = tf.train.AdamOptimizer(LEARNING_RATE)
+    #grads_and_vars = optimizer_op.compute_gradients(cost_op, trainable_var)
+    #optimizer_op.apply_gradients(grads_and_vars)
+
 
     # SESSION RUN OPERATION
     # Predictions for the minibatch, validation set and test set.
