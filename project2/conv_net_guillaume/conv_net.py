@@ -213,7 +213,7 @@ def conv_net_model(x, keep_prob):
 
     concat3 = tf.concat([bn_conv_relu1, bn_deconv_relu3], axis=3, name='concat3')
 
-    bn_conv_relu15 = utils.bn_conv_relu(concat3, weights['W_conv156'], biases['B_conv16'],
+    bn_conv_relu15 = utils.bn_conv_relu(concat3, weights['W_conv16'], biases['B_conv16'],
                                        betas['beta15'], gammas['gamma15'], name='bn_conv_relu15')
 
     bn_conv_relu16 = utils.bn_conv_relu(bn_conv_relu15, weights['W_conv17'], biases['B_conv17'],
