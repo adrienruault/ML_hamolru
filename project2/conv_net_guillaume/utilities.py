@@ -19,7 +19,7 @@ def deconv2d_relu(x, W, B, upscale_factor, name = 'undefined'):
     # Shape of the x tensor
     in_shape = tf.shape(x)
     i = 0
-    if (in_shape[1] < 20):
+    if (tf.cond(in_shape[1] < 20)):
         i=1
     h = ((in_shape[1] - 1) * stride) + 2 - i #1*(in_shape[1] == 13)#(in_shape[1]%2)
     w = ((in_shape[2] - 1) * stride) + 2 - i #1*(in_shape[2] == 13)#(in_shape[2]%2)
