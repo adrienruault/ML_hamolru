@@ -70,19 +70,19 @@ def conv_net_model(x, keep_prob):
                    'W_conv16': tf.Variable(tf.truncated_normal([3, 3, 128, 96]), name = 'W_conv16'),
                    'W_conv17': tf.Variable(tf.truncated_normal([3, 3, 96, 64]), name = 'W_conv17'),
                    'W_convout': tf.Variable(tf.truncated_normal([1, 1, 64, NUM_CLASSES]), name = 'W_convout'),
-                   'W_conv_supp_1': tf.Variable(tf.truncated_normal([3, 3, 64, 64]), name='W_conv_supp1'),
-                   'W_conv_supp_2': tf.Variable(tf.truncated_normal([3, 3, 64, 64]), name='W_conv_supp2'),
-                   'W_conv_supp_3': tf.Variable(tf.truncated_normal([3, 3, 64, 64]), name='W_conv_supp3'),
-                   'W_conv_supp_4': tf.Variable(tf.truncated_normal([3, 3, 64, 64]), name='W_conv_supp4'),
-                   'W_conv_supp_5': tf.Variable(tf.truncated_normal([3, 3, 64, 64]), name='W_conv_supp5'),
-                   'W_conv_supp_6': tf.Variable(tf.truncated_normal([3, 3, 64, 64]), name='W_conv_supp6'),
-                   'W_conv_supp_7': tf.Variable(tf.truncated_normal([3, 3, 64, 64]), name='W_conv_supp7'),
-                   'W_conv_supp_8': tf.Variable(tf.truncated_normal([3, 3, 128, 96]), name='W_conv_supp8'),
-                   'W_conv_supp_9': tf.Variable(tf.truncated_normal([3, 3, 96, 64]), name='W_conv_supp9'),
-                   'W_conv_supp_10': tf.Variable(tf.truncated_normal([3, 3, 64, 64]), name='W_conv_supp10'),
-                   'W_conv_supp_11': tf.Variable(tf.truncated_normal([3, 3, 128, 96]), name='W_conv_supp11'),
-                   'W_conv_supp_12': tf.Variable(tf.truncated_normal([3, 3, 96, 64]), name='W_conv_supp12'),
-                   'W_conv_supp_13': tf.Variable(tf.truncated_normal([3, 3, 64, 64]), name='W_conv_supp13'),
+                   'W_conv_supp1': tf.Variable(tf.truncated_normal([3, 3, 64, 64]), name='W_conv_supp1'),
+                   'W_conv_supp2': tf.Variable(tf.truncated_normal([3, 3, 64, 64]), name='W_conv_supp2'),
+                   'W_conv_supp3': tf.Variable(tf.truncated_normal([3, 3, 64, 64]), name='W_conv_supp3'),
+                   'W_conv_supp4': tf.Variable(tf.truncated_normal([3, 3, 64, 64]), name='W_conv_supp4'),
+                   'W_conv_supp5': tf.Variable(tf.truncated_normal([3, 3, 64, 64]), name='W_conv_supp5'),
+                   'W_conv_supp6': tf.Variable(tf.truncated_normal([3, 3, 64, 64]), name='W_conv_supp6'),
+                   'W_conv_supp7': tf.Variable(tf.truncated_normal([3, 3, 64, 64]), name='W_conv_supp7'),
+                   'W_conv_supp8': tf.Variable(tf.truncated_normal([3, 3, 128, 96]), name='W_conv_supp8'),
+                   'W_conv_supp9': tf.Variable(tf.truncated_normal([3, 3, 96, 64]), name='W_conv_supp9'),
+                   'W_conv_supp10': tf.Variable(tf.truncated_normal([3, 3, 64, 64]), name='W_conv_supp10'),
+                   'W_conv_supp11': tf.Variable(tf.truncated_normal([3, 3, 128, 96]), name='W_conv_supp11'),
+                   'W_conv_supp12': tf.Variable(tf.truncated_normal([3, 3, 96, 64]), name='W_conv_supp12'),
+                   'W_conv_supp13': tf.Variable(tf.truncated_normal([3, 3, 64, 64]), name='W_conv_supp13'),
                    }
 
     with tf.variable_scope('biases'):
@@ -260,7 +260,7 @@ def conv_net_model(x, keep_prob):
     bn_conv_relu_supp6 = utils.bn_conv_relu(bn_conv_relu_supp5, weights['W_conv_supp6'], biases['B_conv_supp6'],
                                             betas['beta_supp6'], gammas['gamma_supp6'], name='bn_conv_supp6')
 
-    bn_deconv_relu_supp1 = utils.bn_deconv_relu(bn_conv_relu_supp6, weights['W_conv_supp_7'],
+    bn_deconv_relu_supp1 = utils.bn_deconv_relu(bn_conv_relu_supp6, weights['W_conv_supp7'],
                                                 biases['B_conv_supp7'],
                                            betas['beta_supp7'], gammas['gamma_supp7'],
                                            upscale_factor=2, name='bn_deconv_relu_supp1')
@@ -273,7 +273,7 @@ def conv_net_model(x, keep_prob):
     bn_conv_relu_supp9 = utils.bn_conv_relu(bn_conv_relu_supp8, weights['W_conv_supp9'], biases['B_conv_supp9'],
                                             betas['beta_supp9'], gammas['gamma_supp9'], name='bn_conv_supp9')
 
-    bn_deconv_relu_supp2 = utils.bn_deconv_relu(bn_conv_relu_supp9, weights['W_conv_supp_10'],
+    bn_deconv_relu_supp2 = utils.bn_deconv_relu(bn_conv_relu_supp9, weights['W_conv_supp10'],
                                                 biases['B_conv_supp10'],
                                                 betas['beta_supp10'], gammas['gamma_supp10'],
                                                 upscale_factor=2, name='bn_deconv_relu_supp2')
