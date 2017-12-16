@@ -23,10 +23,10 @@ BATCH_SIZE = 2
 TRAIN_SIZE = 20
 TEST_SIZE = 10
 
-REGUL_PARAM = 5e-4
+REGUL_PARAM = 1e-8
 
 # Set to default
-LEARNING_RATE = 0.001
+LEARNING_RATE = 0.01
 
 DROPOUT = 0.8
 
@@ -103,6 +103,7 @@ def conv_net_model(x, keep_prob):
                  'beta4': tf.Variable(tf.constant(0.0, shape=[64]), name='beta', trainable=True),
                  'beta5': tf.Variable(tf.constant(0.0, shape=[64]), name='beta', trainable=True),
                  'beta6': tf.Variable(tf.constant(0.0, shape=[64]), name='beta', trainable=True),
+                 'beta7': tf.Variable(tf.constant(0.0, shape=[64]), name='beta', trainable=True),
                  'beta8': tf.Variable(tf.constant(0.0, shape=[64]), name='beta', trainable=True),
                  'beta9': tf.Variable(tf.constant(0.0, shape=[64]), name='beta', trainable=True),
                  'beta10': tf.Variable(tf.constant(0.0, shape=[64]), name='beta', trainable=True),
@@ -110,6 +111,10 @@ def conv_net_model(x, keep_prob):
                  'beta12': tf.Variable(tf.constant(0.0, shape=[64]), name='beta', trainable=True),
                  'beta13': tf.Variable(tf.constant(0.0, shape=[64]), name='beta', trainable=True),
                  'beta14': tf.Variable(tf.constant(0.0, shape=[64]), name='beta', trainable=True),
+                 'beta15': tf.Variable(tf.constant(0.0, shape=[64]), name='beta', trainable=True),
+                 'beta16': tf.Variable(tf.constant(0.0, shape=[64]), name='beta', trainable=True),
+                 'beta17': tf.Variable(tf.constant(0.0, shape=[64]), name='beta', trainable=True),
+                 'beta18': tf.Variable(tf.constant(0.0, shape=[64]), name='beta', trainable=True)
                  }
 
         gammas = {'gamma1': tf.Variable(tf.constant(1.0, shape=[64]), name='gamma', trainable=True),
@@ -124,7 +129,12 @@ def conv_net_model(x, keep_prob):
                   'gamma10': tf.Variable(tf.constant(1.0, shape=[64]), name='gamma', trainable=True),
                   'gamma11': tf.Variable(tf.constant(1.0, shape=[64]), name='gamma', trainable=True),
                   'gamma12': tf.Variable(tf.constant(1.0, shape=[64]), name='gamma', trainable=True),
-                  'gamma13': tf.Variable(tf.constant(1.0, shape=[64]), name='gamma', trainable=True)
+                  'gamma13': tf.Variable(tf.constant(1.0, shape=[64]), name='gamma', trainable=True),
+                  'gamma14': tf.Variable(tf.constant(1.0, shape=[64]), name='gamma', trainable=True),
+                  'gamma15': tf.Variable(tf.constant(1.0, shape=[64]), name='gamma', trainable=True),
+                  'gamma16': tf.Variable(tf.constant(1.0, shape=[64]), name='gamma', trainable=True),
+                  'gamma17': tf.Variable(tf.constant(1.0, shape=[64]), name='gamma', trainable=True),
+                  'gamma18': tf.Variable(tf.constant(1.0, shape=[64]), name='gamma', trainable=True)
                   }
 
     # IMPORTANT STEP
@@ -174,7 +184,8 @@ def conv_net_model(x, keep_prob):
 
     # Going up
     bn_deconv_relu1 = utils.bn_deconv_relu(bn_conv_relu10, weights['W_deconv1'], biases['B_deconv1'],
-                                       upscale_factor=2, name='bn_deconv_relu1')
+                                           betas['beta16'],gammas['gamma16'],
+                                           upscale_factor=2, name='bn_deconv_relu1')
 
     concat1 = tf.concat([bn_conv_relu7, bn_deconv_relu1], axis=3, name='concat1')
 
@@ -185,6 +196,7 @@ def conv_net_model(x, keep_prob):
                                        betas['beta12'], gammas['gamma12'], name='bn_conv_relu12')
 
     bn_deconv_relu2 = utils.bn_deconv_relu(bn_conv_relu12, weights['W_deconv2'], biases['B_deconv2'],
+                                           betas['beta17'], gammas['gamma17'],
                                        upscale_factor=2, name='bn_deconv_relu2')
 
     concat2 = tf.concat([bn_conv_relu4, bn_deconv_relu2], axis=3, name='concat2')
@@ -196,6 +208,7 @@ def conv_net_model(x, keep_prob):
                                        betas['beta14'], gammas['gamma14'], name='bn_conv_relu14')
 
     bn_deconv_relu3 = utils.bn_deconv_relu(bn_conv_relu14, weights['W_deconv3'], biases['B_deconv3'],
+                                           betas['beta18'], gammas['gamma18'],
                                            upscale_factor=2, name='bn_deconv_relu3')
 
     concat3 = tf.concat([bn_conv_relu1, bn_deconv_relu3], axis=3, name='concat3')

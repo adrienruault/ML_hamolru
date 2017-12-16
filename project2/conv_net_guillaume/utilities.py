@@ -28,7 +28,7 @@ def deconv2d_relu(x, W, B, upscale_factor, name = 'undefined'):
 
 def bn_conv_relu(x, W, B, beta, gamma, name): # By default 64.
     bn = batchnorm2d(x, beta, gamma, 'bn' + name)
-    relu = conv_2d_relu(bn, W, B, name='deconv' + name)
+    relu = conv2d_relu(bn, W, B, name='deconv' + name)
     # conv = conv2d(bn, tf.Variable(tf.truncated_normal([3, 3, in_channels, out_channels])))
     # relu = tf.nn.relu(tf.nn.bias_add(conv, tf.Variable(tf.truncated_normal([out_channels]))))
     return relu
