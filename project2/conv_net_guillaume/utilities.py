@@ -22,9 +22,9 @@ def deconv2d_relu(x, W, B, upscale_factor, name = 'undefined'):
     #cond = tf.cond(in_shape[1] < 20, true_fn=tf.constant(1), false_fn=tf.constant(0))
     h = ((in_shape[1] - 1) * stride) + 2 #- 1*(bool(in_shape[1] < 20))#(in_shape[1]%2)
     w = ((in_shape[2] - 1) * stride) + 2 #- 1*(bool(in_shape[2] < 20))#(in_shape[2]%2)
-    if (h == 26):
+    if (h < 30):
         h -= 1
-    if (w == 26):
+    if (w < 30):
         w -= 1
     new_shape = [in_shape[0], h, w, W.shape[3]]
     output_shape = tf.stack(new_shape)
