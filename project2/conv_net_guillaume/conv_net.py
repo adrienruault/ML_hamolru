@@ -265,7 +265,7 @@ def conv_net_model(x, keep_prob):
                                            betas['beta_supp7'], gammas['gamma_supp7'],
                                            upscale_factor=2, name='bn_deconv_relu_supp1')
 
-    concat_supp1 = tf.concat([bn_conv_relu10, bn_deconv_relu_supp1], axis=3, name='concat2')
+    concat_supp1 = tf.concat([bn_conv_relu_supp3, bn_deconv_relu_supp1], axis=3, name='concat2')
 
     bn_conv_relu_supp8 = utils.bn_conv_relu(concat_supp1, weights['W_conv_supp8'], biases['B_conv_supp8'],
                                             betas['beta_supp8'], gammas['gamma_supp8'], name='bn_conv_supp8')
@@ -278,7 +278,7 @@ def conv_net_model(x, keep_prob):
                                                 betas['beta_supp10'], gammas['gamma_supp10'],
                                                 upscale_factor=2, name='bn_deconv_relu_supp2')
 
-    concat_supp2 = tf.concat([bn_conv_relu_supp3, bn_deconv_relu_supp2], axis=3, name='concat2')
+    concat_supp2 = tf.concat([bn_conv_relu10, bn_deconv_relu_supp2], axis=3, name='concat2')
 
     bn_conv_relu_supp11 = utils.bn_conv_relu(concat_supp2, weights['W_conv_supp11'], biases['B_conv_supp11'],
                                             betas['beta_supp11'], gammas['gamma_supp11'], name='bn_conv_supp11')
