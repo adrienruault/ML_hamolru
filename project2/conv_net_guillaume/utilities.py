@@ -18,8 +18,8 @@ def deconv2d_relu(x, W, B, upscale_factor, name = 'undefined'):
     strides = [1, stride, stride, 1]
     # Shape of the x tensor
     in_shape = tf.shape(x)
-    h = ((in_shape[1] - 1) * stride) + 2 - (in_shape[1]%2)
-    w = ((in_shape[2] - 1) * stride) + 2 - (in_shape[2]%2)
+    h = ((in_shape[1] - 1) * stride) + 2 - 1*(in_shape[1] == 13)#(in_shape[1]%2)
+    w = ((in_shape[2] - 1) * stride) + 2 - 1*(in_shape[2] == 13)#(in_shape[2]%2)
     new_shape = [in_shape[0], h, w, W.shape[3]]
     output_shape = tf.stack(new_shape)
     deconv = tf.nn.conv2d_transpose(x, W, output_shape,
