@@ -20,8 +20,8 @@ def deconv2d_relu(x, W, B, upscale_factor, name = 'undefined'):
     in_shape = tf.shape(x)
     #i = 0
     #cond = tf.cond(in_shape[1] < 20, true_fn=tf.constant(1), false_fn=tf.constant(0))
-    h = ((in_shape[1] - 1) * stride) + 2 - (in_shape[1] < 20)#(in_shape[1]%2)
-    w = ((in_shape[2] - 1) * stride) + 2 - (in_shape[2] < 20)#(in_shape[2]%2)
+    h = ((in_shape[1] - 1) * stride) + 2 - 1*(in_shape[1] < 20)#(in_shape[1]%2)
+    w = ((in_shape[2] - 1) * stride) + 2 - 1*(in_shape[2] < 20)#(in_shape[2]%2)
     new_shape = [in_shape[0], h, w, W.shape[3]]
     output_shape = tf.stack(new_shape)
     deconv = tf.nn.conv2d_transpose(x, W, output_shape,
