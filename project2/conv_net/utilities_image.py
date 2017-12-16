@@ -1,6 +1,5 @@
 import os
 import matplotlib.image as mpimg
-from PIL import Image
 from scipy import misc
 
 import numpy as np

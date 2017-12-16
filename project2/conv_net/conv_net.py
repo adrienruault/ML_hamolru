@@ -12,15 +12,15 @@ NUM_CLASSES = 2
 IMG_WIDTH = 400
 IMG_HEIGHT = 400
 
-NUM_EPOCHS = 5
+NUM_EPOCHS = 2
 
 # To be changed to 3
 NUM_CHANNELS = 3
 
 # To be changed to 1
-BATCH_SIZE = 2
+BATCH_SIZE = 1
 
-TRAIN_SIZE = 20
+TRAIN_SIZE = 30
 TEST_SIZE = 10
 
 REGUL_PARAM = 5e-4
@@ -28,11 +28,13 @@ REGUL_PARAM = 5e-4
 # Set to default
 LEARNING_RATE = 0.001
 
-DROPOUT = 0.8
+DROPOUT = 0.9
+
+STD_VAR_INIT = 0.1
 
 OUTPUT_PATH = './conv_net_output/'
 MODEL_PATH = OUTPUT_PATH + 'conv_net_model/conv_net_model.ckpt'
-TRAINING_PATH = 'data/training/'
+TRAINING_PATH = '../data/training/'
 
 PREDICTION_PATH = './conv_net_prediction/'
 
@@ -49,34 +51,37 @@ def conv_net_model(x, keep_prob):
     # see what is the best choice
     # note tf.truncated() is used in the FCN implementation
     with tf.variable_scope('weights'):
-        weights = {'W_conv1': tf.Variable(tf.truncated_normal([3, 3, NUM_CHANNELS, 64]), name = 'W_conv1'),
-                   'W_conv2': tf.Variable(tf.truncated_normal([3, 3, 64, 64]), name = 'W_conv2'),
-                   'W_conv3': tf.Variable(tf.truncated_normal([3, 3, 64, 64]), name = 'W_conv3'),
-                   'W_conv4': tf.Variable(tf.truncated_normal([3, 3, 64, 64]), name = 'W_conv4'),
-                   'W_conv5': tf.Variable(tf.truncated_normal([3, 3, 64, 64]), name = 'W_conv5'),
-                   'W_conv6': tf.Variable(tf.truncated_normal([3, 3, 64, 64]), name = 'W_conv6'),
-                   'W_deconv1': tf.Variable(tf.truncated_normal([3, 3, 64, 64]), name = 'W_deconv1'),
-                   'W_conv7': tf.Variable(tf.truncated_normal([3, 3, 64, 64]), name = 'W_conv7'),
-                   'W_conv8': tf.Variable(tf.truncated_normal([3, 3, 64, 64]), name = 'W_conv8'),
-                   'W_deconv2': tf.Variable(tf.truncated_normal([3, 3, 64, 64]), name = 'W_deconv2'),
-                   'W_conv9': tf.Variable(tf.truncated_normal([3, 3, 64, 64]), name = 'W_conv9'),
-                   'W_conv10': tf.Variable(tf.truncated_normal([3, 3, 64, 64]), name = 'W_conv10'),
-                   'W_convout': tf.Variable(tf.truncated_normal([1, 1, 64, NUM_CLASSES]), name = 'W_convout')}
+        weights = {'W_d_conv1': utils.weight_def([3, 3, NUM_CHANNELS, 64], stddev=STD_VAR_INIT, name = 'W_d_conv1'),
+                   'W_d_conv2': utils.weight_def([3, 3, 64, 64], stddev=STD_VAR_INIT, name = 'W_d_conv2'),
+                   'W_d_conv3': utils.weight_def([3, 3, 64, 128], stddev=STD_VAR_INIT, name = 'W_d_conv3'),
+                   'W_d_conv4': utils.weight_def([3, 3, 128, 128], stddev=STD_VAR_INIT, name = 'W_d_conv4'),
+                   'W_d_conv5': utils.weight_def([3, 3, 128, 256], stddev=STD_VAR_INIT, name = 'W_d_conv5'),
+                   'W_d_conv6': utils.weight_def([3, 3, 256, 256], stddev=STD_VAR_INIT, name = 'W_d_conv6'),
+
+                   'W_deconv1': utils.weight_def([3, 3, 256, 256], stddev=STD_VAR_INIT, name = 'W_deconv1'),
+                   'W_u_conv1': utils.weight_def([3, 3, 384, 256], stddev=STD_VAR_INIT, name = 'W_u_conv1'),
+                   'W_u_conv2': utils.weight_def([3, 3, 256, 128], stddev=STD_VAR_INIT, name = 'W_u_conv2'),
+
+                   'W_deconv2': utils.weight_def([3, 3, 128, 128], stddev=STD_VAR_INIT, name = 'W_deconv2'),
+                   'W_u_conv3': utils.weight_def([3, 3, 192, 128], stddev=STD_VAR_INIT, name = 'W_u_conv3'),
+                   'W_u_conv4': utils.weight_def([3, 3, 128, 64], stddev=STD_VAR_INIT, name = 'W_u_conv4'),
+
+                   'W_convout': utils.weight_def([1, 1, 64, NUM_CLASSES], stddev=STD_VAR_INIT, name = 'W_convout')}
 
     with tf.variable_scope('biases'):
-        biases = {'B_conv1': tf.Variable(tf.truncated_normal([64]), name = 'B_conv1'),
-                   'B_conv2': tf.Variable(tf.truncated_normal([64]), name = 'B_conv2'),
-                   'B_conv3': tf.Variable(tf.truncated_normal([64]), name = 'B_conv3'),
-                   'B_conv4': tf.Variable(tf.truncated_normal([64]), name = 'B_conv4'),
-                   'B_conv5': tf.Variable(tf.truncated_normal([64]), name = 'B_conv5'),
-                   'B_conv6': tf.Variable(tf.truncated_normal([64]), name = 'B_conv6'),
-                   'B_deconv1': tf.Variable(tf.truncated_normal([64]), name = 'B_deconv1'),
-                   'B_conv7': tf.Variable(tf.truncated_normal([64]), name = 'B_conv7'),
-                   'B_conv8': tf.Variable(tf.truncated_normal([64]), name = 'B_conv8'),
-                   'B_deconv2': tf.Variable(tf.truncated_normal([64]), name = 'B_deconv2'),
-                   'B_conv9': tf.Variable(tf.truncated_normal([64]), name = 'B_conv9'),
-                   'B_conv10': tf.Variable(tf.truncated_normal([64]), name = 'B_conv10'),
-                   'B_convout': tf.Variable(tf.truncated_normal([NUM_CLASSES]), name = 'B_convout')}
+        biases = {'B_d_conv1': utils.bias_def([64], name = 'B_d_conv1'),
+                   'B_d_conv2': utils.bias_def([64], name = 'B_d_conv2'),
+                   'B_d_conv3': utils.bias_def([128], name = 'B_d_conv3'),
+                   'B_d_conv4': utils.bias_def([128], name = 'B_d_conv4'),
+                   'B_d_conv5': utils.bias_def([256], name = 'B_d_conv5'),
+                   'B_d_conv6': utils.bias_def([256], name = 'B_d_conv6'),
+                   'B_deconv1': utils.bias_def([256], name = 'B_deconv1'),
+                   'B_u_conv1': utils.bias_def([256], name = 'B_u_conv1'),
+                   'B_u_conv2': utils.bias_def([128], name = 'B_u_conv2'),
+                   'B_deconv2': utils.bias_def([128], name = 'B_deconv2'),
+                   'B_u_conv3': utils.bias_def([128], name = 'B_u_conv3'),
+                   'B_u_conv4': utils.bias_def([64], name = 'B_u_conv4'),
+                   'B_convout': utils.bias_def([NUM_CLASSES], name = 'B_convout')}
 
     # IMPORTANT STEP
     # From FCN implementation:
@@ -85,37 +90,59 @@ def conv_net_model(x, keep_prob):
     #data = tf.reshape(data, shape=[BATCH_SIZE, IMG_WIDTH, IMG_HEIGHT, NUM_CHANNELS])
 
     # Going down
-    conv_relu1 = utils.conv2d_relu(x, weights['W_conv1'], biases['B_conv1'])
+    # First block
+    d_conv_dropout_relu1 = utils.conv2d_dropout_relu(x, weights['W_d_conv1'], biases['B_d_conv1'], keep_prob = keep_prob,\
+                                                        name = 'd_conv_1')
 
-    conv_relu2 = utils.conv2d_relu(conv_relu1, weights['W_conv2'], biases['B_conv2'])
+    d_conv_dropout_relu2 = utils.conv2d_dropout_relu(d_conv_dropout_relu1, weights['W_d_conv2'], biases['B_d_conv2'], keep_prob = keep_prob,\
+                                                        name = 'd_conv_2')
 
-    max_pool1 = utils.maxpool2d(conv_relu2)
+    max_pool1 = utils.maxpool2d(d_conv_dropout_relu2, name = 'max_pool')
 
-    conv_relu3 = utils.conv2d_relu(max_pool1, weights['W_conv3'], biases['B_conv3'])
+    # Second block
+    d_conv_dropout_relu3 = utils.conv2d_dropout_relu(max_pool1, weights['W_d_conv3'], biases['B_d_conv3'], keep_prob = keep_prob,\
+                                                        name = 'd_conv_3')
 
-    conv_relu4 = utils.conv2d_relu(conv_relu3, weights['W_conv4'], biases['B_conv4'])
+    d_conv_dropout_relu4 = utils.conv2d_dropout_relu(d_conv_dropout_relu3, weights['W_d_conv4'], biases['B_d_conv4'], keep_prob = keep_prob,\
+                                                        name = 'd_conv_4')
 
-    max_pool2 = utils.maxpool2d(conv_relu4)
+    max_pool2 = utils.maxpool2d(d_conv_dropout_relu4, name = 'max_pool2')
 
-    conv_relu5 = utils.conv2d_relu(max_pool2, weights['W_conv5'], biases['B_conv5'])
 
-    conv_relu6 = utils.conv2d_relu(conv_relu5, weights['W_conv6'], biases['B_conv6'])
+    # Transition
+    d_conv_dropout_relu5 = utils.conv2d_dropout_relu(max_pool2, weights['W_d_conv5'], biases['B_d_conv5'], keep_prob = keep_prob,\
+                                                        name='d_conv_5')
+
+    d_conv_dropout_relu6 = utils.conv2d_dropout_relu(d_conv_dropout_relu5, weights['W_d_conv6'], biases['B_d_conv6'], keep_prob = keep_prob,\
+                                                        name ='d_conv_6')
+
 
     # Going up
-    deconv_relu1 = utils.deconv2d_relu(conv_relu5, weights['W_deconv1'], biases['B_deconv1'], upscale_factor=2)
+    # First block
+    deconv_relu1 = utils.deconv2d_relu(d_conv_dropout_relu6, weights['W_deconv1'], biases['B_deconv1'], name = 'deconv1')
 
-    conv_relu7 = utils.conv2d_relu(deconv_relu1, weights['W_conv7'], biases['B_conv7'])
+    concat1 = tf.concat([deconv_relu1, d_conv_dropout_relu4], 3, name = 'concat1')
 
-    conv_relu8 = utils.conv2d_relu(conv_relu7, weights['W_conv8'], biases['B_conv8'])
+    u_conv_dropout_relu1 = utils.conv2d_dropout_relu(concat1, weights['W_u_conv1'], biases['B_u_conv1'], keep_prob = keep_prob,\
+                                                        name ='u_conv_1')
 
-    deconv_relu2 = utils.deconv2d_relu(conv_relu4, weights['W_deconv2'], biases['B_deconv2'], upscale_factor=2)
+    u_conv_dropout_relu2 = utils.conv2d_dropout_relu(u_conv_dropout_relu1, weights['W_u_conv2'], biases['B_u_conv2'], keep_prob = keep_prob,\
+                                                        name ='u_conv_2')
 
-    conv_relu9 = utils.conv2d_relu(deconv_relu2, weights['W_conv9'], biases['B_conv9'])
+    # Second block
+    deconv_relu2 = utils.deconv2d_relu(u_conv_dropout_relu2, weights['W_deconv2'], biases['B_deconv2'], name = 'deconv2')
 
-    conv_relu10 = utils.conv2d_relu(conv_relu9, weights['W_conv10'], biases['B_conv10'])
+    concat2 = tf.concat([deconv_relu2, d_conv_dropout_relu2], 3)
 
-    convout = utils.conv2d_relu(conv_relu10, weights['W_convout'], biases['B_convout'])
+    u_conv_dropout_relu3 = utils.conv2d_dropout_relu(concat2, weights['W_u_conv3'], biases['B_u_conv3'], keep_prob = keep_prob,\
+                                                        name ='u_conv_3')
 
+    u_conv_dropout_relu4 = utils.conv2d_dropout_relu(u_conv_dropout_relu3, weights['W_u_conv4'], biases['B_u_conv4'], keep_prob = keep_prob,\
+                                                        name ='u_conv_4')
+
+    # Convout
+    convout = utils.conv2d_dropout_relu(u_conv_dropout_relu4, weights['W_convout'], biases['B_convout'], keep_prob = tf.constant(1.0),\
+                                                        name = 'convout')
 
     # Storing variables into a variables list
     # weights:

@@ -2,9 +2,21 @@ import tensorflow as tf
 import numpy as np
 
 
-def conv2d_relu(x, W, B, name = 'undefined'):
+def weight_def(shape, stddev = 0.1, name = 'undefined'):
+    return tf.Variable(tf.truncated_normal(shape, stddev=stddev), name = name)
+
+
+def bias_def(shape, name):
+    return tf.Variable(tf.constant(0.1, shape=shape))
+
+
+
+
+
+def conv2d_dropout_relu(x, W, B, keep_prob, name):
     conv2d = tf.nn.conv2d(x, W, strides=[1, 1, 1, 1], padding='SAME', name=name)
-    return tf.nn.relu(tf.nn.bias_add(conv2d, B))
+    dropout = tf.nn.dropout(conv2d, keep_prob)
+    return tf.nn.relu(tf.nn.bias_add(dropout, B))
 
 
 def maxpool2d(x, name = 'undefined'):
@@ -13,19 +25,13 @@ def maxpool2d(x, name = 'undefined'):
      """
     return tf.nn.max_pool(x, ksize=[1, 2, 2, 1], strides = [1, 2, 2, 1], padding = 'SAME', name = name)
 
-def deconv2d_relu(x, W, B, upscale_factor, name = 'undefined'):
-    stride = upscale_factor #upscale_factor
-    strides = [1, stride, stride, 1]
-    # Shape of the x tensor
-    in_shape = tf.shape(x)
-    h = ((in_shape[1] - 1) * stride) + 2
-    w = ((in_shape[2] - 1) * stride) + 2
-    new_shape = [in_shape[0], h, w, W.shape[3]]
-    output_shape = tf.stack(new_shape)
-    deconv = tf.nn.conv2d_transpose(x, W, output_shape,
-                                    strides=strides, padding='SAME', name = name)
-    return tf.nn.relu(tf.nn.bias_add(deconv, B))
 
+
+def deconv2d_relu(x, W, B, name):
+    x_shape = tf.shape(x)
+    output_shape = tf.stack([x_shape[0], x_shape[1]*2, x_shape[2]*2, x_shape[3]])
+    deconv = tf.nn.conv2d_transpose(x, W, output_shape, strides=[1, 2, 2, 1], padding='SAME')
+    return tf.nn.relu(tf.nn.bias_add(deconv, B))
 
 
 
