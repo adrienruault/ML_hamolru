@@ -85,11 +85,12 @@ def conv_net_model(x, keep_prob):
                    'B_deconv3': tf.Variable(tf.truncated_normal([64]), name = 'B_deconv3'),
                    'B_conv9': tf.Variable(tf.truncated_normal([64]), name = 'B_conv9'),
                    'B_conv10': tf.Variable(tf.truncated_normal([64]), name = 'B_conv10'),
-                   'B_conv11': tf.Variable(tf.truncated_normal([96]), name = 'B_conv11'),
-                   'B_conv12': tf.Variable(tf.truncated_normal([64]), name = 'B_conv12'),
-                   'B_conv13': tf.Variable(tf.truncated_normal([96]), name = 'B_conv13'),
-                   'B_conv14': tf.Variable(tf.truncated_normal([64]), name = 'B_conv14'),
-                   'B_conv15': tf.Variable(tf.truncated_normal([96]), name = 'B_conv15'),
+                   'B_conv11': tf.Variable(tf.truncated_normal([64]), name = 'B_conv11'),
+                   'B_conv12': tf.Variable(tf.truncated_normal([96]), name = 'B_conv12'),
+                   'B_conv13': tf.Variable(tf.truncated_normal([64]), name = 'B_conv13'),
+                   'B_conv14': tf.Variable(tf.truncated_normal([96]), name = 'B_conv14'),
+                   'B_conv15': tf.Variable(tf.truncated_normal([64]), name = 'B_conv15'),
+                   'B_conv16': tf.Variable(tf.truncated_normal([96]), name = 'B_conv16'),
                    'B_conv16': tf.Variable(tf.truncated_normal([64]), name = 'B_conv16'),
                    'B_convout': tf.Variable(tf.truncated_normal([NUM_CLASSES]), name = 'B_convout')}
 
