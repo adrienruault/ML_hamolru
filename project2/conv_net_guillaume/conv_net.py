@@ -63,13 +63,12 @@ def conv_net_model(x, keep_prob):
                    'W_conv9': tf.Variable(tf.truncated_normal([3, 3, 64, 64]), name = 'W_conv9'),
                    'W_conv10': tf.Variable(tf.truncated_normal([3, 3, 64, 64]), name = 'W_conv10'),
                    'W_conv11': tf.Variable(tf.truncated_normal([3, 3, 64, 64]), name = 'W_conv11'),
-                   'W_conv12': tf.Variable(tf.truncated_normal([3, 3, 64, 64]), name = 'W_conv12'),
-                   'W_conv13': tf.Variable(tf.truncated_normal([3, 3, 64, 64]), name = 'W_conv13'),
-                   'W_conv14': tf.Variable(tf.truncated_normal([3, 3, 64, 64]), name = 'W_conv14'),
-                   'W_conv15': tf.Variable(tf.truncated_normal([3, 3, 64, 64]), name = 'W_conv15'),
-                   'W_conv16': tf.Variable(tf.truncated_normal([3, 3, 64, 64]), name = 'W_conv16'),
-                   'W_conv17': tf.Variable(tf.truncated_normal([3, 3, 64, 64]), name = 'W_conv17'),
-                   'W_conv18': tf.Variable(tf.truncated_normal([3, 3, 64, 64]), name = 'W_conv18'),
+                   'W_conv12': tf.Variable(tf.truncated_normal([3, 3, 128, 96]), name = 'W_conv12'),
+                   'W_conv13': tf.Variable(tf.truncated_normal([3, 3, 96, 64]), name = 'W_conv13'),
+                   'W_conv14': tf.Variable(tf.truncated_normal([3, 3, 128, 96]), name = 'W_conv14'),
+                   'W_conv15': tf.Variable(tf.truncated_normal([3, 3, 96, 64]), name = 'W_conv15'),
+                   'W_conv16': tf.Variable(tf.truncated_normal([3, 3, 128, 96]), name = 'W_conv16'),
+                   'W_conv17': tf.Variable(tf.truncated_normal([3, 3, 96, 64]), name = 'W_conv17'),
                    'W_convout': tf.Variable(tf.truncated_normal([1, 1, 64, NUM_CLASSES]), name = 'W_convout')}
 
     with tf.variable_scope('biases'):
@@ -86,14 +85,12 @@ def conv_net_model(x, keep_prob):
                    'B_deconv3': tf.Variable(tf.truncated_normal([64]), name = 'B_deconv3'),
                    'B_conv9': tf.Variable(tf.truncated_normal([64]), name = 'B_conv9'),
                    'B_conv10': tf.Variable(tf.truncated_normal([64]), name = 'B_conv10'),
-                   'B_conv11': tf.Variable(tf.truncated_normal([64]), name = 'B_conv11'),
+                   'B_conv11': tf.Variable(tf.truncated_normal([96]), name = 'B_conv11'),
                    'B_conv12': tf.Variable(tf.truncated_normal([64]), name = 'B_conv12'),
-                   'B_conv13': tf.Variable(tf.truncated_normal([64]), name = 'B_conv13'),
+                   'B_conv13': tf.Variable(tf.truncated_normal([96]), name = 'B_conv13'),
                    'B_conv14': tf.Variable(tf.truncated_normal([64]), name = 'B_conv14'),
-                   'B_conv15': tf.Variable(tf.truncated_normal([64]), name = 'B_conv15'),
+                   'B_conv15': tf.Variable(tf.truncated_normal([96]), name = 'B_conv15'),
                    'B_conv16': tf.Variable(tf.truncated_normal([64]), name = 'B_conv16'),
-                   'B_conv17': tf.Variable(tf.truncated_normal([64]), name = 'B_conv17'),
-                   'B_conv18': tf.Variable(tf.truncated_normal([64]), name = 'B_conv18'),
                    'B_convout': tf.Variable(tf.truncated_normal([NUM_CLASSES]), name = 'B_convout')}
 
     with tf.variable_scope('batch_normalization_param'):
@@ -107,12 +104,12 @@ def conv_net_model(x, keep_prob):
                  'beta8': tf.Variable(tf.constant(0.0, shape=[64]), name='beta', trainable=True),
                  'beta9': tf.Variable(tf.constant(0.0, shape=[64]), name='beta', trainable=True),
                  'beta10': tf.Variable(tf.constant(0.0, shape=[64]), name='beta', trainable=True),
-                 'beta11': tf.Variable(tf.constant(0.0, shape=[64]), name='beta', trainable=True),
-                 'beta12': tf.Variable(tf.constant(0.0, shape=[64]), name='beta', trainable=True),
-                 'beta13': tf.Variable(tf.constant(0.0, shape=[64]), name='beta', trainable=True),
-                 'beta14': tf.Variable(tf.constant(0.0, shape=[64]), name='beta', trainable=True),
-                 'beta15': tf.Variable(tf.constant(0.0, shape=[64]), name='beta', trainable=True),
-                 'beta16': tf.Variable(tf.constant(0.0, shape=[64]), name='beta', trainable=True),
+                 'beta11': tf.Variable(tf.constant(0.0, shape=[128]), name='beta', trainable=True),
+                 'beta12': tf.Variable(tf.constant(0.0, shape=[96]), name='beta', trainable=True),
+                 'beta13': tf.Variable(tf.constant(0.0, shape=[128]), name='beta', trainable=True),
+                 'beta14': tf.Variable(tf.constant(0.0, shape=[96]), name='beta', trainable=True),
+                 'beta15': tf.Variable(tf.constant(0.0, shape=[128]), name='beta', trainable=True),
+                 'beta16': tf.Variable(tf.constant(0.0, shape=[96]), name='beta', trainable=True),
                  'beta17': tf.Variable(tf.constant(0.0, shape=[64]), name='beta', trainable=True),
                  'beta18': tf.Variable(tf.constant(0.0, shape=[64]), name='beta', trainable=True)
                  }
@@ -127,12 +124,12 @@ def conv_net_model(x, keep_prob):
                   'gamma8': tf.Variable(tf.constant(1.0, shape=[64]), name='gamma', trainable=True),
                   'gamma9': tf.Variable(tf.constant(1.0, shape=[64]), name='gamma', trainable=True),
                   'gamma10': tf.Variable(tf.constant(1.0, shape=[64]), name='gamma', trainable=True),
-                  'gamma11': tf.Variable(tf.constant(1.0, shape=[64]), name='gamma', trainable=True),
-                  'gamma12': tf.Variable(tf.constant(1.0, shape=[64]), name='gamma', trainable=True),
-                  'gamma13': tf.Variable(tf.constant(1.0, shape=[64]), name='gamma', trainable=True),
-                  'gamma14': tf.Variable(tf.constant(1.0, shape=[64]), name='gamma', trainable=True),
-                  'gamma15': tf.Variable(tf.constant(1.0, shape=[64]), name='gamma', trainable=True),
-                  'gamma16': tf.Variable(tf.constant(1.0, shape=[64]), name='gamma', trainable=True),
+                  'gamma11': tf.Variable(tf.constant(1.0, shape=[128]), name='gamma', trainable=True),
+                  'gamma12': tf.Variable(tf.constant(1.0, shape=[96]), name='gamma', trainable=True),
+                  'gamma13': tf.Variable(tf.constant(1.0, shape=[128]), name='gamma', trainable=True),
+                  'gamma14': tf.Variable(tf.constant(1.0, shape=[96]), name='gamma', trainable=True),
+                  'gamma15': tf.Variable(tf.constant(1.0, shape=[128]), name='gamma', trainable=True),
+                  'gamma16': tf.Variable(tf.constant(1.0, shape=[96]), name='gamma', trainable=True),
                   'gamma17': tf.Variable(tf.constant(1.0, shape=[64]), name='gamma', trainable=True),
                   'gamma18': tf.Variable(tf.constant(1.0, shape=[64]), name='gamma', trainable=True)
                   }
@@ -213,11 +210,11 @@ def conv_net_model(x, keep_prob):
 
     concat3 = tf.concat([bn_conv_relu1, bn_deconv_relu3], axis=3, name='concat3')
 
-    bn_conv_relu15 = utils.bn_conv_relu(concat3, weights['W_conv15'], biases['B_conv15'],
-                                       betas['beta14'], gammas['gamma14'], name='bn_conv_relu15')
+    bn_conv_relu15 = utils.bn_conv_relu(concat3, weights['W_conv156'], biases['B_conv16'],
+                                       betas['beta15'], gammas['gamma15'], name='bn_conv_relu15')
 
-    bn_conv_relu16 = utils.bn_conv_relu(bn_conv_relu15, weights['W_conv16'], biases['B_conv16'],
-                                       betas['beta15'], gammas['gamma15'], name='bn_conv_relu16')
+    bn_conv_relu16 = utils.bn_conv_relu(bn_conv_relu15, weights['W_conv17'], biases['B_conv17'],
+                                       betas['beta16'], gammas['gamma16'], name='bn_conv_relu16')
 
     convout = utils.conv2d_relu(bn_conv_relu16, weights['W_convout'], biases['B_convout'], name='convout')
 
