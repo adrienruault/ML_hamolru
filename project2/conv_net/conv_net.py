@@ -32,7 +32,7 @@ DROPOUT = 0.8
 
 OUTPUT_PATH = './conv_net_output/'
 MODEL_PATH = OUTPUT_PATH + 'conv_net_model/conv_net_model.ckpt'
-TRAINING_PATH = 'data/training/'
+TRAINING_PATH = '../data/training/'
 
 PREDICTION_PATH = './conv_net_prediction/'
 
