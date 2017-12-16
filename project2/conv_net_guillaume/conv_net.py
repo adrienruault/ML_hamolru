@@ -69,7 +69,21 @@ def conv_net_model(x, keep_prob):
                    'W_conv15': tf.Variable(tf.truncated_normal([3, 3, 96, 64]), name = 'W_conv15'),
                    'W_conv16': tf.Variable(tf.truncated_normal([3, 3, 128, 96]), name = 'W_conv16'),
                    'W_conv17': tf.Variable(tf.truncated_normal([3, 3, 96, 64]), name = 'W_conv17'),
-                   'W_convout': tf.Variable(tf.truncated_normal([1, 1, 64, NUM_CLASSES]), name = 'W_convout')}
+                   'W_convout': tf.Variable(tf.truncated_normal([1, 1, 64, NUM_CLASSES]), name = 'W_convout'),
+                   'W_conv_supp_1': tf.Variable(tf.truncated_normal([3, 3, 64, 64]), name='W_conv_supp1'),
+                   'W_conv_supp_2': tf.Variable(tf.truncated_normal([3, 3, 64, 64]), name='W_conv_supp2'),
+                   'W_conv_supp_3': tf.Variable(tf.truncated_normal([3, 3, 64, 64]), name='W_conv_supp3'),
+                   'W_conv_supp_4': tf.Variable(tf.truncated_normal([3, 3, 64, 64]), name='W_conv_supp4'),
+                   'W_conv_supp_5': tf.Variable(tf.truncated_normal([3, 3, 64, 64]), name='W_conv_supp5'),
+                   'W_conv_supp_6': tf.Variable(tf.truncated_normal([3, 3, 64, 64]), name='W_conv_supp6'),
+                   'W_conv_supp_7': tf.Variable(tf.truncated_normal([3, 3, 64, 64]), name='W_conv_supp7'),
+                   'W_conv_supp_8': tf.Variable(tf.truncated_normal([3, 3, 128, 96]), name='W_conv_supp8'),
+                   'W_conv_supp_9': tf.Variable(tf.truncated_normal([3, 3, 96, 64]), name='W_conv_supp9'),
+                   'W_conv_supp_10': tf.Variable(tf.truncated_normal([3, 3, 64, 64]), name='W_conv_supp10'),
+                   'W_conv_supp_11': tf.Variable(tf.truncated_normal([3, 3, 128, 96]), name='W_conv_supp11'),
+                   'W_conv_supp_12': tf.Variable(tf.truncated_normal([3, 3, 96, 64]), name='W_conv_supp12'),
+                   'W_conv_supp_13': tf.Variable(tf.truncated_normal([3, 3, 64, 64]), name='W_conv_supp13'),
+                   }
 
     with tf.variable_scope('biases'):
         biases = {'B_conv1': tf.Variable(tf.truncated_normal([64]), name = 'B_conv1'),
@@ -91,8 +105,22 @@ def conv_net_model(x, keep_prob):
                    'B_conv14': tf.Variable(tf.truncated_normal([96]), name = 'B_conv14'),
                    'B_conv15': tf.Variable(tf.truncated_normal([64]), name = 'B_conv15'),
                    'B_conv16': tf.Variable(tf.truncated_normal([96]), name = 'B_conv16'),
-                   'B_conv16': tf.Variable(tf.truncated_normal([64]), name = 'B_conv16'),
-                   'B_convout': tf.Variable(tf.truncated_normal([NUM_CLASSES]), name = 'B_convout')}
+                   'B_conv17': tf.Variable(tf.truncated_normal([64]), name = 'B_conv17'),
+                   'B_convout': tf.Variable(tf.truncated_normal([NUM_CLASSES]), name = 'B_convout'),
+                   'B_conv_supp1': tf.Variable(tf.truncated_normal([64]), name='B_conv1_supp1'),
+                   'B_conv_supp2': tf.Variable(tf.truncated_normal([64]), name='B_conv1_supp2'),
+                   'B_conv_supp3': tf.Variable(tf.truncated_normal([64]), name='B_conv1_supp3'),
+                   'B_conv_supp4': tf.Variable(tf.truncated_normal([64]), name='B_conv1_supp4'),
+                   'B_conv_supp5': tf.Variable(tf.truncated_normal([64]), name='B_conv1_supp5'),
+                   'B_conv_supp6': tf.Variable(tf.truncated_normal([64]), name='B_conv1_supp6'),
+                   'B_conv_supp7': tf.Variable(tf.truncated_normal([64]), name='B_conv1_supp7'),
+                   'B_conv_supp8': tf.Variable(tf.truncated_normal([96]), name='B_conv1_supp8'),
+                   'B_conv_supp9': tf.Variable(tf.truncated_normal([64]), name='B_conv1_supp9'),
+                   'B_conv_supp10': tf.Variable(tf.truncated_normal([64]), name='B_conv1_supp10'),
+                   'B_conv_supp11': tf.Variable(tf.truncated_normal([96]), name='B_conv1_supp11'),
+                   'B_conv_supp12': tf.Variable(tf.truncated_normal([64]), name='B_conv1_supp12'),
+                   'B_conv_supp13': tf.Variable(tf.truncated_normal([64]), name='B_conv1_supp13'),
+                  }
 
     with tf.variable_scope('batch_normalization_param'):
         betas = {'beta1': tf.Variable(tf.constant(0.0, shape=[64]), name='beta1', trainable=True),
@@ -113,7 +141,20 @@ def conv_net_model(x, keep_prob):
                  'beta16': tf.Variable(tf.constant(0.0, shape=[96]), name='beta16', trainable=True),
                  'beta17': tf.Variable(tf.constant(0.0, shape=[64]), name='beta17', trainable=True),
                  'beta18': tf.Variable(tf.constant(0.0, shape=[64]), name='beta18', trainable=True),
-                 'beta19': tf.Variable(tf.constant(0.0, shape=[64]), name='beta19', trainable=True)
+                 'beta19': tf.Variable(tf.constant(0.0, shape=[64]), name='beta19', trainable=True),
+                 'beta_supp1': tf.Variable(tf.constant(0.0, shape=[64]), name='beta_supp1', trainable=True),
+                 'beta_supp2': tf.Variable(tf.constant(0.0, shape=[64]), name='beta_supp2', trainable=True),
+                 'beta_supp3': tf.Variable(tf.constant(0.0, shape=[64]), name='beta_supp3', trainable=True),
+                 'beta_supp4': tf.Variable(tf.constant(0.0, shape=[64]), name='beta_supp4', trainable=True),
+                 'beta_supp5': tf.Variable(tf.constant(0.0, shape=[64]), name='beta_supp5', trainable=True),
+                 'beta_supp6': tf.Variable(tf.constant(0.0, shape=[64]), name='beta_supp6', trainable=True),
+                 'beta_supp7': tf.Variable(tf.constant(0.0, shape=[64]), name='beta_supp7', trainable=True),
+                 'beta_supp8': tf.Variable(tf.constant(0.0, shape=[128]), name='beta_supp8', trainable=True),
+                 'beta_supp9': tf.Variable(tf.constant(0.0, shape=[96]), name='beta_supp9', trainable=True),
+                 'beta_supp10': tf.Variable(tf.constant(0.0, shape=[64]), name='beta_supp10', trainable=True),
+                 'beta_supp11': tf.Variable(tf.constant(0.0, shape=[128]), name='beta_supp11', trainable=True),
+                 'beta_supp12': tf.Variable(tf.constant(0.0, shape=[96]), name='beta_supp12', trainable=True),
+                 'beta_supp13': tf.Variable(tf.constant(0.0, shape=[64]), name='beta_supp13', trainable=True),
                  }
 
         gammas = {'gamma1': tf.Variable(tf.constant(1.0, shape=[64]), name='gamma1', trainable=True),
@@ -135,6 +176,19 @@ def conv_net_model(x, keep_prob):
                   'gamma17': tf.Variable(tf.constant(1.0, shape=[64]), name='gamma17', trainable=True),
                   'gamma18': tf.Variable(tf.constant(1.0, shape=[64]), name='gamma18', trainable=True),
                   'gamma19': tf.Variable(tf.constant(1.0, shape=[64]), name='gamma19', trainable=True),
+                  'gamma_supp1': tf.Variable(tf.constant(1.0, shape=[64]), name='gamma_supp1', trainable=True),
+                  'gamma_supp2': tf.Variable(tf.constant(1.0, shape=[64]), name='gamma_supp2', trainable=True),
+                  'gamma_supp3': tf.Variable(tf.constant(1.0, shape=[64]), name='gamma_supp3', trainable=True),
+                  'gamma_supp4': tf.Variable(tf.constant(1.0, shape=[64]), name='gamma_supp4', trainable=True),
+                  'gamma_supp5': tf.Variable(tf.constant(1.0, shape=[64]), name='gamma_supp5', trainable=True),
+                  'gamma_supp6': tf.Variable(tf.constant(1.0, shape=[64]), name='gamma_supp6', trainable=True),
+                  'gamma_supp7': tf.Variable(tf.constant(1.0, shape=[64]), name='gamma_supp7', trainable=True),
+                  'gamma_supp8': tf.Variable(tf.constant(1.0, shape=[128]), name='gamma_supp8', trainable=True),
+                  'gamma_supp9': tf.Variable(tf.constant(1.0, shape=[96]), name='gamma_supp9', trainable=True),
+                  'gamma_supp10': tf.Variable(tf.constant(1.0, shape=[64]), name='gamma_supp10', trainable=True),
+                  'gamma_supp11': tf.Variable(tf.constant(1.0, shape=[128]), name='gamma_supp11', trainable=True),
+                  'gamma_supp12': tf.Variable(tf.constant(1.0, shape=[96]), name='gamma_supp12', trainable=True),
+                  'gamma_supp13': tf.Variable(tf.constant(1.0, shape=[64]), name='gamma_supp13', trainable=True),
                   }
 
     # IMPORTANT STEP
@@ -182,8 +236,59 @@ def conv_net_model(x, keep_prob):
     bn_conv_relu10 = utils.bn_conv_relu(bn_conv_relu9, weights['W_conv11'], biases['B_conv11'],
                                       betas['beta10'], gammas['gamma10'], name='bn_conv_relu10')
 
+    # Enlarge model, going to 25x25 from 100x100
+
+    bn_conv_relu_supp1 = utils.bn_conv_relu(bn_conv_relu9, weights['W_conv_supp1'], biases['B_conv_supp1'],
+                                        betas['beta_supp1'], gammas['gamma_supp1'], name='bn_conv_supp1')
+
+    max_pool_supp1 = utils.maxpool2d(bn_conv_relu_supp1, name='max_pool_supp1')
+
+    bn_conv_relu_supp2 = utils.bn_conv_relu(max_pool_supp1, weights['W_conv_supp2'], biases['B_conv_supp2'],
+                                            betas['beta_supp2'], gammas['gamma_supp2'], name='bn_conv_supp2')
+
+    bn_conv_relu_supp3 = utils.bn_conv_relu(bn_conv_relu_supp2, weights['W_conv_supp3'], biases['B_conv_supp3'],
+                                            betas['beta_supp3'], gammas['gamma_supp3'], name='bn_conv_supp3')
+
+    bn_conv_relu_supp4 = utils.bn_conv_relu(bn_conv_relu_supp3, weights['W_conv_supp4'], biases['B_conv_supp4'],
+                                            betas['beta_supp4'], gammas['gamma_supp4'], name='bn_conv_supp4')
+
+    max_pool_supp2 = utils.maxpool2d(bn_conv_relu_supp4, name='max_pool_supp2')
+
+    bn_conv_relu_supp5 = utils.bn_conv_relu(max_pool_supp2, weights['W_conv_supp5'], biases['B_conv_supp5'],
+                                            betas['beta_supp5'], gammas['gamma_supp5'], name='bn_conv_supp5')
+
+    bn_conv_relu_supp6 = utils.bn_conv_relu(bn_conv_relu_supp5, weights['W_conv_supp6'], biases['B_conv_supp6'],
+                                            betas['beta_supp6'], gammas['gamma_supp6'], name='bn_conv_supp6')
+
+    bn_deconv_relu_supp1 = utils.bn_deconv_relu(bn_conv_relu_supp6, weights['W_conv_supp_7'],
+                                                biases['B_conv_supp7'],
+                                           betas['beta_supp7'], gammas['gamma_supp7'],
+                                           upscale_factor=2, name='bn_deconv_relu_supp1')
+
+    concat_supp1 = tf.concat([bn_conv_relu10, bn_deconv_relu_supp1], axis=3, name='concat2')
+
+    bn_conv_relu_supp8 = utils.bn_conv_relu(concat_supp1, weights['W_conv_supp8'], biases['B_conv_supp8'],
+                                            betas['beta_supp8'], gammas['gamma_supp8'], name='bn_conv_supp8')
+
+    bn_conv_relu_supp9 = utils.bn_conv_relu(bn_conv_relu_supp8, weights['W_conv_supp9'], biases['B_conv_supp9'],
+                                            betas['beta_supp9'], gammas['gamma_supp9'], name='bn_conv_supp9')
+
+    bn_deconv_relu_supp2 = utils.bn_deconv_relu(bn_conv_relu_supp9, weights['W_conv_supp_10'],
+                                                biases['B_conv_supp10'],
+                                                betas['beta_supp10'], gammas['gamma_supp10'],
+                                                upscale_factor=2, name='bn_deconv_relu_supp2')
+
+    concat_supp2 = tf.concat([bn_conv_relu_supp3, bn_deconv_relu_supp2], axis=3, name='concat2')
+
+    bn_conv_relu_supp11 = utils.bn_conv_relu(concat_supp2, weights['W_conv_supp11'], biases['B_conv_supp11'],
+                                            betas['beta_supp11'], gammas['gamma_supp11'], name='bn_conv_supp11')
+
+    bn_conv_relu_supp12 = utils.bn_conv_relu(bn_conv_relu_supp11, weights['W_conv_supp12'],
+                                             biases['B_conv_supp12'],
+                                            betas['beta_supp12'], gammas['gamma_supp12'], name='bn_conv_supp12')
+
     # Going up
-    bn_deconv_relu1 = utils.bn_deconv_relu(bn_conv_relu10, weights['W_deconv1'], biases['B_deconv1'],
+    bn_deconv_relu1 = utils.bn_deconv_relu(bn_conv_relu_supp12, weights['W_deconv1'], biases['B_deconv1'],
                                            betas['beta17'],gammas['gamma17'],
                                            upscale_factor=2, name='bn_deconv_relu1')
 
@@ -401,8 +506,8 @@ class Trainer(object):
                     print('Image' + str(i+1) + ' accuracy:', accuracy, '%%')
                     self.store_prediction(sess, img, groundtruth,
                                             save_path = OUTPUT_PATH +\
-                                                        "train_predictions/image_{a}_epoch_{b}.png".format(a=(i+1)
-                                                                                                        , b=epoch))
+                                                        "train_predictions/image_{a}_epoch_{b}.png".format(a=(i+1),
+                                                                                                           b=epoch))
 
                 model_path = self.conv_net.save(sess, MODEL_PATH)
             return model_path
