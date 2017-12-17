@@ -12,7 +12,7 @@ NUM_CLASSES = 2
 IMG_WIDTH = 400
 IMG_HEIGHT = 400
 
-NUM_EPOCHS = 1
+NUM_EPOCHS = 3
 
 # To be changed to 3
 NUM_CHANNELS = 3
@@ -20,18 +20,18 @@ NUM_CHANNELS = 3
 # To be changed to 1
 BATCH_SIZE = 1
 
-TRAIN_SIZE = 5
+TRAIN_SIZE = 20
 TEST_SIZE = 10
 
 RECORDING_STEP = 5
 
 # initially set to 5e-4 but it is maybe too much
-REGUL_PARAM = 1e-8
+REGUL_PARAM = 1e-15
 
 # Default is 0.001 for AdamOptimizer
 LEARNING_RATE = 0.001
 
-DROPOUT = 0.95
+DROPOUT = 1.0
 
 STD_VAR_INIT = 0.1
 
@@ -108,81 +108,89 @@ def conv_net_model(x, keep_prob):
 
     # Going down
     # First block
-    d_conv_dropout_relu1 = utils.conv2d_dropout_relu(x, weights['W_d_conv1'], biases['B_d_conv1'], keep_prob = keep_prob,\
-                                                        name = 'd_conv_1')
+    with tf.name_scope('pool1'):
+        d_conv_dropout_relu1 = utils.conv2d_dropout_relu(x, weights['W_d_conv1'], biases['B_d_conv1'], keep_prob = keep_prob,\
+                                                            name = 'd_conv_1')
 
-    d_conv_dropout_relu2 = utils.conv2d_dropout_relu(d_conv_dropout_relu1, weights['W_d_conv2'], biases['B_d_conv2'], keep_prob = keep_prob,\
-                                                        name = 'd_conv_2')
+        d_conv_dropout_relu2 = utils.conv2d_dropout_relu(d_conv_dropout_relu1, weights['W_d_conv2'], biases['B_d_conv2'], keep_prob = keep_prob,\
+                                                            name = 'd_conv_2')
 
-    max_pool1 = utils.maxpool2d(d_conv_dropout_relu2, name = 'max_pool')
+        max_pool1 = utils.maxpool2d(d_conv_dropout_relu2, name = 'max_pool')
 
     # Second block
-    d_conv_dropout_relu3 = utils.conv2d_dropout_relu(max_pool1, weights['W_d_conv3'], biases['B_d_conv3'], keep_prob = keep_prob,\
-                                                        name = 'd_conv_3')
+    with tf.name_scope('pool2'):
+        d_conv_dropout_relu3 = utils.conv2d_dropout_relu(max_pool1, weights['W_d_conv3'], biases['B_d_conv3'], keep_prob = keep_prob,\
+                                                            name = 'd_conv_3')
 
-    d_conv_dropout_relu4 = utils.conv2d_dropout_relu(d_conv_dropout_relu3, weights['W_d_conv4'], biases['B_d_conv4'], keep_prob = keep_prob,\
-                                                        name = 'd_conv_4')
+        d_conv_dropout_relu4 = utils.conv2d_dropout_relu(d_conv_dropout_relu3, weights['W_d_conv4'], biases['B_d_conv4'], keep_prob = keep_prob,\
+                                                            name = 'd_conv_4')
 
-    max_pool2 = utils.maxpool2d(d_conv_dropout_relu4, name = 'max_pool2')
+        max_pool2 = utils.maxpool2d(d_conv_dropout_relu4, name = 'max_pool2')
 
 
     # Third block
-    d_conv_dropout_relu5 = utils.conv2d_dropout_relu(max_pool2, weights['W_d_conv5'], biases['B_d_conv5'], keep_prob = keep_prob,\
-                                                        name='d_conv_5')
+    with tf.name_scope('pool3'):
+        d_conv_dropout_relu5 = utils.conv2d_dropout_relu(max_pool2, weights['W_d_conv5'], biases['B_d_conv5'], keep_prob = keep_prob,\
+                                                            name='d_conv_5')
 
-    d_conv_dropout_relu6 = utils.conv2d_dropout_relu(d_conv_dropout_relu5, weights['W_d_conv6'], biases['B_d_conv6'], keep_prob = keep_prob,\
-                                                        name ='d_conv_6')
+        d_conv_dropout_relu6 = utils.conv2d_dropout_relu(d_conv_dropout_relu5, weights['W_d_conv6'], biases['B_d_conv6'], keep_prob = keep_prob,\
+                                                            name ='d_conv_6')
 
-    max_pool3 = utils.maxpool2d(d_conv_dropout_relu6, name = 'max_pool3')
+        max_pool3 = utils.maxpool2d(d_conv_dropout_relu6, name = 'max_pool3')
 
 
     # Transition
-    d_conv_dropout_relu7 = utils.conv2d_dropout_relu(max_pool3, weights['W_d_conv7'], biases['B_d_conv7'], keep_prob = keep_prob,\
-                                                        name='d_conv_7')
+    with tf.name_scope('transition'):
+        d_conv_dropout_relu7 = utils.conv2d_dropout_relu(max_pool3, weights['W_d_conv7'], biases['B_d_conv7'], keep_prob = keep_prob,\
+                                                            name='d_conv_7')
 
-    d_conv_dropout_relu8 = utils.conv2d_dropout_relu(d_conv_dropout_relu7, weights['W_d_conv8'], biases['B_d_conv8'], keep_prob = keep_prob,\
-                                                        name ='d_conv_8')
+        d_conv_dropout_relu8 = utils.conv2d_dropout_relu(d_conv_dropout_relu7, weights['W_d_conv8'], biases['B_d_conv8'], keep_prob = keep_prob,\
+                                                            name ='d_conv_8')
 
 
 
     # Going up
     # First block
-    deconv_relu1 = utils.deconv2d_relu(d_conv_dropout_relu8, weights['W_deconv1'], biases['B_deconv1'], name = 'deconv1')
+    with tf.name_scope('deconv1'):
+        deconv_relu1 = utils.deconv2d_relu(d_conv_dropout_relu8, weights['W_deconv1'], biases['B_deconv1'], name = 'deconv1')
 
-    concat1 = tf.concat([deconv_relu1, d_conv_dropout_relu6], 3, name = 'concat1')
+        concat1 = tf.concat([deconv_relu1, d_conv_dropout_relu6], 3, name = 'concat1')
 
-    u_conv_dropout_relu1 = utils.conv2d_dropout_relu(concat1, weights['W_u_conv1'], biases['B_u_conv1'], keep_prob = keep_prob,\
-                                                        name ='u_conv_1')
+        u_conv_dropout_relu1 = utils.conv2d_dropout_relu(concat1, weights['W_u_conv1'], biases['B_u_conv1'], keep_prob = keep_prob,\
+                                                            name ='u_conv_1')
 
-    u_conv_dropout_relu2 = utils.conv2d_dropout_relu(u_conv_dropout_relu1, weights['W_u_conv2'], biases['B_u_conv2'], keep_prob = keep_prob,\
-                                                        name ='u_conv_2')
+        u_conv_dropout_relu2 = utils.conv2d_dropout_relu(u_conv_dropout_relu1, weights['W_u_conv2'], biases['B_u_conv2'], keep_prob = keep_prob,\
+                                                            name ='u_conv_2')
 
     # Second block
-    deconv_relu2 = utils.deconv2d_relu(u_conv_dropout_relu2, weights['W_deconv2'], biases['B_deconv2'], name = 'deconv2')
+    with tf.name_scope('deconv2'):
+        deconv_relu2 = utils.deconv2d_relu(u_conv_dropout_relu2, weights['W_deconv2'], biases['B_deconv2'], name = 'deconv2')
 
-    concat2 = tf.concat([deconv_relu2, d_conv_dropout_relu4], 3)
+        concat2 = tf.concat([deconv_relu2, d_conv_dropout_relu4], 3)
 
-    u_conv_dropout_relu3 = utils.conv2d_dropout_relu(concat2, weights['W_u_conv3'], biases['B_u_conv3'], keep_prob = keep_prob,\
-                                                        name ='u_conv_3')
+        u_conv_dropout_relu3 = utils.conv2d_dropout_relu(concat2, weights['W_u_conv3'], biases['B_u_conv3'], keep_prob = keep_prob,\
+                                                            name ='u_conv_3')
 
-    u_conv_dropout_relu4 = utils.conv2d_dropout_relu(u_conv_dropout_relu3, weights['W_u_conv4'], biases['B_u_conv4'], keep_prob = keep_prob,\
-                                                        name ='u_conv_4')
+        u_conv_dropout_relu4 = utils.conv2d_dropout_relu(u_conv_dropout_relu3, weights['W_u_conv4'], biases['B_u_conv4'], keep_prob = keep_prob,\
+                                                            name ='u_conv_4')
 
 
     # Third block
-    deconv_relu3 = utils.deconv2d_relu(u_conv_dropout_relu4, weights['W_deconv3'], biases['B_deconv3'], name = 'deconv3')
+    with tf.name_scope('deconv3'):
+        deconv_relu3 = utils.deconv2d_relu(u_conv_dropout_relu4, weights['W_deconv3'], biases['B_deconv3'], name = 'deconv3')
 
-    concat3 = tf.concat([deconv_relu3, d_conv_dropout_relu2], 3)
+        concat3 = tf.concat([deconv_relu3, d_conv_dropout_relu2], 3)
 
-    u_conv_dropout_relu5 = utils.conv2d_dropout_relu(concat3, weights['W_u_conv5'], biases['B_u_conv5'], keep_prob = keep_prob,\
-                                                        name ='u_conv_5')
+        u_conv_dropout_relu5 = utils.conv2d_dropout_relu(concat3, weights['W_u_conv5'], biases['B_u_conv5'], keep_prob = keep_prob,\
+                                                            name ='u_conv_5')
 
-    u_conv_dropout_relu6 = utils.conv2d_dropout_relu(u_conv_dropout_relu5, weights['W_u_conv6'], biases['B_u_conv6'], keep_prob = keep_prob,\
-                                                        name ='u_conv_6')
+        u_conv_dropout_relu6 = utils.conv2d_dropout_relu(u_conv_dropout_relu5, weights['W_u_conv6'], biases['B_u_conv6'], keep_prob = keep_prob,\
+                                                            name ='u_conv_6')
 
     # Convout
-    convout = utils.conv2d_dropout_relu(u_conv_dropout_relu6, weights['W_convout'], biases['B_convout'], keep_prob = tf.constant(1.0),\
-                                                        name = 'convout')
+    with tf.name_scope('convout'):
+        convout = utils.conv2d_dropout_relu(u_conv_dropout_relu6, weights['W_convout'], biases['B_convout'], keep_prob = tf.constant(1.0),\
+                                                            name = 'convout')
 
     # Storing variables into a variables list
     # weights:
@@ -214,8 +222,11 @@ class ConvNet(object):
         with tf.name_scope('cost'):
             self.cost = self._get_cost(logits)
 
-        with tf.name_scope('gradients'):
-            self.gradients_node = tf.gradients(self.cost, self.variables)
+        with tf.name_scope('cross_entropy_sum'):
+            self.cross_entropy_sum = tf.reduce_sum(\
+                                        tf.nn.softmax_cross_entropy_with_logits(\
+                                            logits=tf.reshape(logits, [-1, NUM_CLASSES]),
+                                            labels=tf.reshape(self.y, [-1, NUM_CLASSES])))
 
         with tf.name_scope('cross_entropy'):
         # Only computed for the sake of summary in TensorBoard
@@ -223,12 +234,11 @@ class ConvNet(object):
                                     tf.reshape(utils.pixel_wise_softmax_2(logits), [-1, NUM_CLASSES])))
 
         with tf.name_scope('softmax_predicter'):
-            self.predicter = utils.pixel_wise_softmax_2(logits)
-
-        with tf.name_scope('argmax_predicter'):
-            self.correct_pred = tf.equal(tf.argmax(self.predicter, 3), tf.argmax(self.y, 3))
+            #self.predicter = utils.pixel_wise_softmax_2(logits)
+            self.predicter = tf.nn.softmax(logits, dim = 3)
 
         with tf.name_scope('accuracy'):
+            self.correct_pred = tf.equal(tf.argmax(self.predicter, 3), tf.argmax(self.y, 3))
             self.accuracy = tf.reduce_mean(tf.cast(self.correct_pred, tf.float32))
 
     def _get_cost(self, logits):
@@ -240,6 +250,8 @@ class ConvNet(object):
         # add regularization
         with tf.name_scope('regularizers'):
             regularizers = sum([tf.nn.l2_loss(variable) for variable in self.variables])
+
+        tf.summary.scalar('regularizers', REGUL_PARAM * regularizers)
         loss += REGUL_PARAM * regularizers
 
         return loss
@@ -278,17 +290,16 @@ class Trainer(object):
 
     def _get_optimizer(self, global_step):
         self.learning_rate_node = tf.Variable(LEARNING_RATE)
-        optimizer = tf.train.AdamOptimizer(learning_rate=self.learning_rate_node)\
+        #optimizer = tf.train.AdamOptimizer(learning_rate=self.learning_rate_node)\
+        #                                    .minimize(self.conv_net.cost, global_step=global_step)
+        optimizer = tf.train.AdadeltaOptimizer(learning_rate=self.learning_rate_node)\
                                             .minimize(self.conv_net.cost, global_step=global_step)
         return optimizer
 
     def _initialize(self):
         global_step = tf.Variable(0)
 
-        self.norm_gradients_node = tf.Variable(tf.constant(0.0, shape=[len(self.conv_net.gradients_node)]))
-
         # Definition of the summaries
-        tf.summary.histogram('norm_grads', self.norm_gradients_node)
         tf.summary.scalar('loss', self.conv_net.cost)
         tf.summary.scalar('cross_entropy', self.conv_net.cross_entropy)
         tf.summary.scalar('accuracy', self.conv_net.accuracy)
@@ -297,6 +308,16 @@ class Trainer(object):
             self.optimizer = self._get_optimizer(global_step)
 
         tf.summary.scalar('learning_rate', self.learning_rate_node)
+
+        #summary_convout = get_image_summary(conv_net.logits)
+        #tf.summary.image('convout', summary_convout)
+
+        summary_predicter = utils_img.get_image_summary(self.conv_net.predicter)
+        tf.summary.image('convout', summary_predicter)
+
+        summary_argmax = utils_img.get_image_summary(tf.expand_dims(tf.argmax(self.conv_net.predicter, 3), 3))
+        tf.summary.image('argmax_convout', summary_argmax)
+
 
         # Merging all summaries for tensor flow
         self.summary_op = tf.summary.merge_all()
@@ -338,27 +359,25 @@ class Trainer(object):
             image_indices = np.array(range(data.shape[0]))
             for epoch in range(hm_epochs):
                 shuffle(image_indices)
-                count_batch = 0
                 epoch_loss = 0
                 for step in range(int(TRAIN_SIZE/BATCH_SIZE)):
                     # feeding epoch_x and epoch_y for training current batch (to replace with our own )
-                    epoch_x = data[[image_indices[count_batch:count_batch+BATCH_SIZE]]]
-                    epoch_y = labels[[image_indices[count_batch:count_batch + BATCH_SIZE]]]
-                    count_batch += BATCH_SIZE
-                    img_idx = [image_indices[count_batch:count_batch+BATCH_SIZE]][0]
-
+                    epoch_x = data[[image_indices[step:step+BATCH_SIZE]]]
+                    epoch_y = labels[[image_indices[step:step + BATCH_SIZE]]]
 
                     if step % RECORDING_STEP == 0:
-                        summary_str, _, loss, lr, gradients = sess.run((self.summary_op, self.optimizer, self.conv_net.cost, self.learning_rate_node, self.conv_net.gradients_node),\
+                        summary_str, _, loss, lr = sess.run((self.summary_op, self.optimizer, self.conv_net.cost, self.learning_rate_node),\
                                                             feed_dict={self.conv_net.x: epoch_x, self.conv_net.y: epoch_y,
                                                                         self.conv_net.keep_prob: DROPOUT})
-                        summary_writer.add_summary(summary_str, step)
+
+                        glob_step = epoch *int(TRAIN_SIZE/BATCH_SIZE) + step
+                        summary_writer.add_summary(summary_str, glob_step)
                         summary_writer.flush()
                     else:
                         # sees.run() evaluate a tensor
                         # the first argument of sess.run() is an array corresponding to every operation needed
                         # Feeding sess.run() with y is necessary because cost_op needs it
-                        _, loss, lr, gradients = sess.run((self.optimizer, self.conv_net.cost, self.learning_rate_node, self.conv_net.gradients_node),\
+                        _, loss, lr = sess.run((self.optimizer, self.conv_net.cost, self.learning_rate_node),\
                                                             feed_dict={self.conv_net.x: epoch_x, self.conv_net.y: epoch_y,
                                                                         self.conv_net.keep_prob: DROPOUT})
                     epoch_loss += loss
@@ -372,7 +391,7 @@ class Trainer(object):
                 print('Current batch size:', BATCH_SIZE)
 
                 # In the future convert it in test set
-                for i in range(TRAIN_SIZE):
+                for i in range(0, TRAIN_SIZE, RECORDING_STEP):
                     img = data[[i]]
                     groundtruth = labels[[i]]
                     accuracy = self.output_stats(sess, img, groundtruth)

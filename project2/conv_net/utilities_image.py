@@ -5,6 +5,9 @@ from scipy import misc
 import numpy as np
 
 
+PIXEL_DEPTH = 255
+
+
 def load_images(folder_path, num_images):
     """Extract the images into a 4D tensor [image index, y, x, channels].
         Indices are from 0.
@@ -64,3 +67,25 @@ def save_image_from_proba_pred(prediction, save_path):
     #print('img_prediction shape:', img_prediction.shape)
     #print(img_prediction)
     misc.imsave(save_path, img_prediction)
+
+
+
+
+
+
+
+
+
+# Make an image summary for 4d tensor image with index idx
+def get_image_summary(img, idx = 0):
+    V = tf.slice(img, (0, 0, 0, idx), (1, -1, -1, 1))
+    img_w = img.get_shape().as_list()[1]
+    img_h = img.get_shape().as_list()[2]
+    min_value = tf.reduce_min(V)
+    V = V - min_value
+    max_value = tf.reduce_max(V)
+    V = V / (max_value*PIXEL_DEPTH)
+    V = tf.reshape(V, (img_w, img_h, 1))
+    V = tf.transpose(V, (2, 0, 1))
+    V = tf.reshape(V, (-1, img_w, img_h, 1))
+    return V

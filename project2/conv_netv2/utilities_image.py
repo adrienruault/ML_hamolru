@@ -1,8 +1,13 @@
 import os
 import matplotlib.image as mpimg
 from scipy import misc
+import tensorflow as tf
 
 import numpy as np
+
+
+
+PIXEL_DEPTH = 255
 
 
 def load_images(folder_path, num_images):
@@ -33,6 +38,7 @@ def convert_image_to_hot(img):
             else:
                 hot_img[i,j,0] = 0.0
                 hot_img[i,j,1] = 1.0
+
     return hot_img
 
 def load_groundtruths(folder_path, num_images):
@@ -61,9 +67,33 @@ def save_image_from_proba_pred(prediction, save_path):
     img_prediction = prediction[:,:,:,1]
     img_prediction = np.squeeze(img_prediction, axis = 0)
     #print(img_prediction)
-    img_prediction = img_prediction * 255
     print('img_prediction shape', img_prediction.shape)
     print(img_prediction)
     #print('img_prediction shape:', img_prediction.shape)
     #print(img_prediction)
+    min_value = np.amin(img_prediction)
+    max_value = np.amax(img_prediction)
+    img_prediction = (img_prediction - min_value) * (255.0 / (max_value - min_value))
     misc.imsave(save_path, img_prediction)
+
+
+
+
+
+
+
+
+
+# Make an image summary for 4d tensor image with index idx
+def get_image_summary(img, idx = 0):
+    V = tf.slice(img, (0, 0, 0, idx), (1, -1, -1, 1))
+    img_w = img.get_shape().as_list()[1]
+    img_h = img.get_shape().as_list()[2]
+    min_value = tf.reduce_min(V)
+    V = V - min_value
+    max_value = tf.reduce_max(V)
+    V = V / (max_value*PIXEL_DEPTH)
+    V = tf.reshape(V, (img_w, img_h, 1))
+    V = tf.transpose(V, (2, 0, 1))
+    V = tf.reshape(V, (-1, img_w, img_h, 1))
+    return V
