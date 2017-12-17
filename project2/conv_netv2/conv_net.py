@@ -259,7 +259,7 @@ class ConvNet(object):
     def predict(self, x_test):
         init = tf.global_variables_initializer()
 
-        with tf.Session as sess:
+        with tf.Session() as sess:
             sess.run(init)
 
             # Restoring the model from previous train
@@ -277,9 +277,9 @@ class ConvNet(object):
 
         return save_path
 
-    def restore(self, sess):
+    def restore(self, sess, model_save_path):
         saver = tf.train.Saver()
-        saver.restore(sess, MODEL_PATH)
+        saver.restore(sess, model_save_path)
 
 
 
@@ -348,8 +348,9 @@ class Trainer(object):
             sess.run(init)
 
             if restore:
-                ckpt = tf.train.get_checkpoint_state(OUTPUT_PATH)
+                ckpt = tf.train.get_checkpoint_state(OUTPUT_PATH + 'conv_net_model/')
                 if ckpt and ckpt.model_checkpoint_path:
+                    print('Restoring previous train...')
                     self.conv_net.restore(sess, ckpt.model_checkpoint_path)
 
             summary_writer = tf.summary.FileWriter(OUTPUT_PATH + 'summary/', graph=sess.graph)
@@ -423,8 +424,12 @@ class Trainer(object):
 def main():
     conv_net = ConvNet()
     trainer = Trainer(conv_net)
-    save_model_path = trainer.train()
-    print('Model saved in:', save_model_path)
+    #save_model_path = trainer.train(restore = True)
+    #print('Model saved in:', save_model_path)
+
+    data = utils_img.load_images(TRAINING_PATH + 'images/',1)
+    predictions = conv_net.predict(data[[0]])
+    utils_img.save_image_from_proba_pred(predictions, OUTPUT_PATH + 'prediction_satImage_001.png')
 
 
 if __name__ == '__main__':
