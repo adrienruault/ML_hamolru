@@ -18,8 +18,9 @@ def deconv2d_relu(x, W, B, upscale_factor, name = 'undefined'):
     strides = [1, stride, stride, 1]
     # Shape of the x tensor
     in_shape = tf.shape(x)
-    h = ((in_shape[1] - 1) * stride) + 2
-    w = ((in_shape[2] - 1) * stride) + 2
+
+    h = ((in_shape[1] - 1) * stride) + 2 - (in_shape[1]*2%5) #- 1*(bool(in_shape[1] < 20))#
+    w = ((in_shape[2] - 1) * stride) + 2 - (in_shape[2]*2%5) #- 1*(bool(in_shape[2] < 20))#(in_shape[2]%2)
     new_shape = [in_shape[0], h, w, W.shape[3]]
     output_shape = tf.stack(new_shape)
     deconv = tf.nn.conv2d_transpose(x, W, output_shape,
@@ -28,7 +29,7 @@ def deconv2d_relu(x, W, B, upscale_factor, name = 'undefined'):
 
 def bn_conv_relu(x, W, B, beta, gamma, name): # By default 64.
     bn = batchnorm2d(x, beta, gamma, 'bn' + name)
-    relu = conv_2d_relu(bn, W, B, name='deconv' + name)
+    relu = conv2d_relu(bn, W, B, name='deconv' + name)
     # conv = conv2d(bn, tf.Variable(tf.truncated_normal([3, 3, in_channels, out_channels])))
     # relu = tf.nn.relu(tf.nn.bias_add(conv, tf.Variable(tf.truncated_normal([out_channels]))))
     return relu

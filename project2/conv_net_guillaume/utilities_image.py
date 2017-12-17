@@ -60,7 +60,14 @@ def save_image_from_proba_pred(prediction, save_path):
     img_prediction = np.argmax(prediction, axis = 3)
     img_prediction = np.squeeze(img_prediction, axis = 0)
     #print(img_prediction)
-    img_prediction = img_prediction * 255
+    min = np.min(img_prediction)
+    if (min < 0):
+        print("Weird, min value is below 0")
+        min=0
+    max = np.max(img_prediction)
+    if (max < min):
+        print("Error: max value < min or negative")
+    img_prediction = ((img_prediction-min)/(max-min)) * 255
     #print('img_prediction shape:', img_prediction.shape)
     #print(img_prediction)
     misc.imsave(save_path, img_prediction)
