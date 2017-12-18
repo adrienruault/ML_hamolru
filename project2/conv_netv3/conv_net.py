@@ -12,13 +12,13 @@ NUM_CLASSES = 2
 IMG_WIDTH = 400
 IMG_HEIGHT = 400
 
-NUM_EPOCHS = 3
+NUM_EPOCHS = 20
 
 # To be changed to 3
 NUM_CHANNELS = 3
 
 # To be changed to 1
-BATCH_SIZE = 1
+BATCH_SIZE = 2
 
 TRAIN_SIZE = 100
 TEST_SIZE = 10
@@ -369,7 +369,7 @@ class Trainer(object):
 
             sess.run(init)
 
-            print('trainable:', tf.trainable_variables(scope='bn'))
+            print('trainable:', tf.trainable_variables(scope=None))
 
             if restore:
                 ckpt = tf.train.get_checkpoint_state(OUTPUT_PATH + 'conv_net_model/')
@@ -450,11 +450,11 @@ class Trainer(object):
 
 def main():
     conv_net = ConvNet()
-    trainer = Trainer(conv_net)
-    save_model_path = trainer.train(restore = True)
-    print('Model saved in:', save_model_path)
+    #trainer = Trainer(conv_net)
+    #save_model_path = trainer.train(restore = False)
+    #print('Model saved in:', save_model_path)
 
-    data = utils_img.load_images(TRAINING_PATH + 'images/',1)
+    data = utils_img.load_images(TRAINING_PATH,1)
     predictions = conv_net.predict(data[[0]])
     utils_img.compare_proba_pred(predictions, data[0], OUTPUT_PATH + 'prediction_satImage_001.png')
 
