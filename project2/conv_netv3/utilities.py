@@ -7,7 +7,7 @@ def weight_def(shape, stddev = 0.1, name = 'undefined'):
 
 
 def bias_def(shape, name):
-    return tf.Variable(tf.constant(0.1, shape=shape))
+    return tf.Variable(tf.constant(0.1, shape=shape), name = name)
 
 
 def conv2d(x, W, name):
