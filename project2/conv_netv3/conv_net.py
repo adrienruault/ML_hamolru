@@ -450,11 +450,11 @@ class Trainer(object):
 
 def main():
     conv_net = ConvNet()
-    #trainer = Trainer(conv_net)
-    #save_model_path = trainer.train(restore = False)
-    #print('Model saved in:', save_model_path)
+    trainer = Trainer(conv_net)
+    save_model_path = trainer.train(restore = True)
+    print('Model saved in:', save_model_path)
 
-    data = utils_img.load_images(TRAINING_PATH,1)
+    data = utils_img.load_images(TRAINING_PATH + '/images', 1)
     predictions = conv_net.predict(data[[0]])
     utils_img.compare_proba_pred(predictions, data[0], OUTPUT_PATH + 'prediction_satImage_001.png')
 
