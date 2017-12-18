@@ -29,6 +29,26 @@ def load_images(folder_path, num_images):
     return imgs
 
 
+def load_test_images(num_images):
+    imgs = np.zeros(shape=[num_images, 400, 400, 3])
+    for i in range(1, int(num_images/4) + 1):
+        for j in range(1, 5):
+            image_path = '../data/test_set_good_format/test_' + str(i) + '_' + str(j) + '.png'
+            if os.path.isfile(image_path):
+                print('Loading ' + image_path)
+                img = mpimg.imread(image_path)
+                imgs[(i-1)*4 + (j-1)] = img.reshape(400, 400, 3)
+            else:
+                print('File ' + image_path + ' does not exist')
+    return imgs
+
+#
+# def save_test_pred(path, preds):
+#     n_images = preds.shape[0]
+#     for i in range(n_images):
+
+
+
 def convert_test_set_to_good_format():
     n_images = 50
     imgs = np.zeros(shape=[n_images, 608, 608, 3])
@@ -50,7 +70,6 @@ def convert_test_set_to_good_format():
             misc.imsave('../data/test_set_good_format/test_' + str(i) + '_' + str(4) + '.png', imgs_converted[(i-1)*4+3])
 
 
-
 def convert_image_to_hot(img):
     hot_img = np.zeros([400, 400, 2], dtype = float)
     for i in range(hot_img.shape[0]):
@@ -63,6 +82,7 @@ def convert_image_to_hot(img):
                 hot_img[i,j,1] = 1.0
 
     return hot_img
+
 
 def load_groundtruths(folder_path, num_images):
     """Extract the groundtruth images into a 4D tensor [image index, y, x, channels].
@@ -145,3 +165,5 @@ def get_image_summary(img, idx = 0):
 
 if __name__ == '__main__':
     convert_test_set_to_good_format()
+    imgs = load_test_images(200)
+    print(imgs[0].shape)
