@@ -12,7 +12,8 @@ NUM_CLASSES = 2
 IMG_WIDTH = 400
 IMG_HEIGHT = 400
 
-NUM_EPOCHS = 20
+# Best 6 epochs
+NUM_EPOCHS = 2
 
 # To be changed to 3
 NUM_CHANNELS = 3
@@ -20,10 +21,11 @@ NUM_CHANNELS = 3
 # To be changed to 1
 BATCH_SIZE = 2
 
-TRAIN_SIZE = 100
-TEST_SIZE = 10
+TRAIN_SIZE = 400
+VALIDATION_SIZE = 0
+TEST_SIZE = 200
 
-RECORDING_STEP = 5
+RECORDING_STEP = 10
 
 # initially set to 5e-4 but it is maybe too much
 REGUL_PARAM = 1e-15
@@ -39,7 +41,8 @@ BLOCK_NUMBER = 5
 
 OUTPUT_PATH = './conv_net_output/'
 MODEL_PATH = OUTPUT_PATH + 'conv_net_model/conv_net_model.ckpt'
-TRAINING_PATH = '../data/training/'
+TRAINING_PATH = '../data/flip_training/'
+TEST_PATH = '../data/test_set_good_format/'
 
 PREDICTION_PATH = './conv_net_prediction/'
 
@@ -140,15 +143,6 @@ def conv_net_model(x, keep_prob, phase_train):
                    'B_u_conv12': utils.bias_def([64], name = 'B_u_conv12'),
 
                    'B_convout': utils.bias_def([NUM_CLASSES], name = 'B_convout')}
-
-    # IMPORTANT STEP
-    # From FCN implementation:
-    # shape = tf.shape(data)
-    # deconv_shape3 = tf.stack([shape[0], shape[1], shape[2], NUM_OF_CLASSESS])
-    #data = tf.reshape(data, shape=[BATCH_SIZE, IMG_WIDTH, IMG_HEIGHT, NUM_CHANNELS])
-
-
-    #dep_features = 64
 
 
     # Going down
@@ -350,15 +344,34 @@ class Trainer(object):
 
     def train(self, restore=False):
 
+        if not os.path.exists(OUTPUT_PATH + 'validation_predictions/'):
+            os.makedirs(OUTPUT_PATH + 'validation_predictions/')
+
         if not os.path.exists(OUTPUT_PATH + 'train_predictions/'):
             os.makedirs(OUTPUT_PATH + 'train_predictions/')
 
-        print('-> Loading data:')
-        data = utils_img.load_images(TRAINING_PATH + "images/", TRAIN_SIZE)
-        labels = utils_img.load_groundtruths(TRAINING_PATH + "groundtruth/", TRAIN_SIZE)
+        print('-> Loading training set:')
+        loaded_data = utils_img.load_images(TRAINING_PATH + "images/", TRAIN_SIZE)
+        loaded_labels = utils_img.load_groundtruths(TRAINING_PATH + "groundtruth/", TRAIN_SIZE)
 
-        print("train data shape: ", data.shape)
-        print("labels shape: ", labels.shape)
+        train_indices = np.array(range(loaded_data.shape[0]))
+        shuffle(train_indices)
+
+        train_imgs = loaded_data[train_indices[VALIDATION_SIZE:]]
+        train_labels = loaded_labels[train_indices[VALIDATION_SIZE:]]
+        valid_imgs = loaded_data[train_indices[:VALIDATION_SIZE]]
+        valid_labels = loaded_labels[train_indices[:VALIDATION_SIZE]]
+
+        print("loaded data shape: ", loaded_data.shape)
+        print("loaded labels shape: ", loaded_labels.shape)
+
+        print('Number of training images loaded:', train_imgs.shape[0])
+        print('Number of training groundtruths loaded:', train_labels.shape[0])
+
+        print('Number of validation images loaded:', valid_imgs.shape[0])
+        print('Number of validation groundtruths loaded:', valid_labels.shape[0])
+
+
 
 
         init = self._initialize()
@@ -369,7 +382,7 @@ class Trainer(object):
 
             sess.run(init)
 
-            print('trainable:', tf.trainable_variables(scope=None))
+            #print('trainable:', tf.trainable_variables(scope=None))
 
             if restore:
                 ckpt = tf.train.get_checkpoint_state(OUTPUT_PATH + 'conv_net_model/')
@@ -379,23 +392,26 @@ class Trainer(object):
 
             summary_writer = tf.summary.FileWriter(OUTPUT_PATH + 'summary/', graph=sess.graph)
 
-
             hm_epochs = NUM_EPOCHS
-            image_indices = np.array(range(data.shape[0]))
+            image_indices = np.array(range(train_imgs.shape[0]))
             for epoch in range(hm_epochs):
+                print()
+                print('-> Epoch', epoch+1, 'starting...')
                 shuffle(image_indices)
                 epoch_loss = 0
-                for step in range(int(TRAIN_SIZE/BATCH_SIZE)):
+                for step in range(int((TRAIN_SIZE - VALIDATION_SIZE)/BATCH_SIZE)):
                     # feeding epoch_x and epoch_y for training current batch (to replace with our own )
-                    epoch_x = data[[image_indices[step:step+BATCH_SIZE]]]
-                    epoch_y = labels[[image_indices[step:step + BATCH_SIZE]]]
+                    epoch_x = train_imgs[[image_indices[step * BATCH_SIZE : step * BATCH_SIZE + BATCH_SIZE]]]
+                    epoch_y = train_labels[[image_indices[step * BATCH_SIZE : step * BATCH_SIZE + BATCH_SIZE]]]
 
                     if step % RECORDING_STEP == 0:
-                        summary_str, _, loss, lr = sess.run((self.summary_op, self.optimizer, self.conv_net.cost, self.learning_rate_node),\
+                        summary_str, _, loss, lr, predictions = sess.run((self.summary_op, self.optimizer, self.conv_net.cost, self.learning_rate_node, self.conv_net.predicter),\
                                                             feed_dict={self.conv_net.x: epoch_x, self.conv_net.y: epoch_y,
                                                                         self.conv_net.keep_prob: DROPOUT, self.conv_net.phase_train: True})
 
-                        glob_step = epoch *int(TRAIN_SIZE/BATCH_SIZE) + step
+                        glob_step = epoch *int((TRAIN_SIZE - VALIDATION_SIZE)/BATCH_SIZE) + step
+                        utils_img.compare_proba_pred(predictions, np.squeeze(epoch_x, axis = 0),\
+                                                    OUTPUT_PATH + 'train_predictions/step' + str(glob_step) + '.png')
                         summary_writer.add_summary(summary_str, glob_step)
                         summary_writer.flush()
                     else:
@@ -406,36 +422,44 @@ class Trainer(object):
                                                             feed_dict={self.conv_net.x: epoch_x, self.conv_net.y: epoch_y,
                                                                         self.conv_net.keep_prob: DROPOUT, self.conv_net.phase_train: True})
                     epoch_loss += loss
-                    print('Step', step+1, 'completed out of', int(TRAIN_SIZE/BATCH_SIZE), '/ step loss:', loss)
+                    print('Step', step+1, 'completed out of', int((TRAIN_SIZE - VALIDATION_SIZE)/BATCH_SIZE), '/ step loss:', loss,\
+                            ' / batch:', image_indices[step * BATCH_SIZE : step * BATCH_SIZE + BATCH_SIZE])
 
                 print('epoch_x shape:', epoch_x.shape)
                 print('epoch_y shape:', epoch_y.shape)
 
-
-                print('-> Epoch', epoch+1, 'completed out of', hm_epochs, '/ epoch loss:', epoch_loss)
-                print('Current batch size:', BATCH_SIZE)
+                print()
+                print('===> Epoch', epoch+1, 'completed out of', hm_epochs, '/ epoch train loss:', epoch_loss)
+                print('batch size: ' + str(BATCH_SIZE) +')')
 
                 model_path = self.conv_net.save(sess, MODEL_PATH)
 
                 # In the future convert it in test set
-                for i in range(0, TRAIN_SIZE, RECORDING_STEP):
-                    img = data[[i]]
-                    groundtruth = labels[[i]]
-                    accuracy = self.output_stats(sess, img, groundtruth)
-                    print('Image' + str(i+1) + ' accuracy:', accuracy, '%%')
-                    self.store_prediction(sess, img, groundtruth,\
-                                            save_path = OUTPUT_PATH + "train_predictions/image_{a}_epoch_{b}.png".format(a=(i+1), b=epoch))
+                valid_loss_arr = np.zeros(VALIDATION_SIZE)
+                valid_accuracy_arr = np.zeros(VALIDATION_SIZE)
+                for i in range(0, VALIDATION_SIZE):
+                    img = valid_imgs[[i]]
+                    groundtruth = valid_labels[[i]]
+                    valid_loss, valid_accuracy = self.output_stats(sess, img, groundtruth)
+                    valid_loss_arr[i] = valid_loss
+                    valid_accuracy_arr[i] = valid_accuracy
 
+                    if i % (RECORDING_STEP * 2) == 0:
+                        self.store_prediction(sess, img, groundtruth,\
+                                    save_path = OUTPUT_PATH + "validation_predictions/image_{a}_epoch_{b}.png".format(a=(i+1), b=epoch))
+                print('Validation stats / epoch:', epoch + 1)
+                print('Averaged validation loss:', np.mean(valid_loss_arr))
+                print('Averaged validation accuracy:', np.mean(valid_accuracy_arr))
             return model_path
 
 
     def output_stats(self, sess, batch_x, batch_y):
         # Calculate batch loss and accuracy
-        loss, acc, predictions = sess.run([self.conv_net.cost, self.conv_net.accuracy, self.conv_net.predicter],
-                                                        feed_dict={self.conv_net.x: batch_x, self.conv_net.y: batch_y, self.conv_net.keep_prob: 1.,\
-                                                                    self.conv_net.phase_train: False})
+        loss, acc = sess.run([self.conv_net.cost, self.conv_net.accuracy, self.conv_net.predicter],
+                                feed_dict={self.conv_net.x: batch_x, self.conv_net.y: batch_y, self.conv_net.keep_prob: 1.,\
+                                            self.conv_net.phase_train: False})
 
-        return utils.accuracy(predictions, batch_y)
+        return loss, acc*100
 
 
 
@@ -451,12 +475,43 @@ class Trainer(object):
 def main():
     conv_net = ConvNet()
     trainer = Trainer(conv_net)
-    save_model_path = trainer.train(restore = True)
+    save_model_path = trainer.train(restore = False)
     print('Model saved in:', save_model_path)
 
-    data = utils_img.load_images(TRAINING_PATH + '/images', 1)
-    predictions = conv_net.predict(data[[0]])
-    utils_img.compare_proba_pred(predictions, data[0], OUTPUT_PATH + 'prediction_satImage_001.png')
+    if False:
+        if not os.path.exists(OUTPUT_PATH + '400_400_test_pred/'):
+            os.makedirs(OUTPUT_PATH + '400_400_test_pred/')
+
+        if not os.path.exists(OUTPUT_PATH + 'test_pred/'):
+            os.makedirs(OUTPUT_PATH + 'test_pred/')
+
+        if not os.path.exists(OUTPUT_PATH + 'submission/'):
+            os.makedirs(OUTPUT_PATH + 'submission/')
+
+        data_test = utils_img.load_test_images(TEST_PATH, TEST_SIZE)
+
+        merged_prediction_array = []
+        for i in range(int(TEST_SIZE/4)):
+            pred_array_400 = []
+            for j in range(4):
+                test_predictions = conv_net.predict(data_test[[i*4+j]])
+                #utils_img.compare_proba_pred(test_predictions, data_test[i*4+j],\
+                #                            OUTPUT_PATH + '400_400_test_pred/prediction_test_' + str(i) +'_'+ str(j) + '.png')
+                pred_array_400 += [np.squeeze(test_predictions, 0)]
+            merged_prediction = utils_img.merge_400_400_pred(pred_array_400)
+            utils_img.save_image(merged_prediction, OUTPUT_PATH + 'test_pred/prediction_test_' + str(i+1) + '.png')
+            merged_prediction_array += [merged_prediction]
+            print('test_' + str(i+1) + ' computed')
+
+        utils.write_submission(merged_prediction_array, OUTPUT_PATH + 'submission/submission20.csv', threshold=0.20)
+        utils.write_submission(merged_prediction_array, OUTPUT_PATH + 'submission/submission25.csv', threshold=0.25)
+        utils.write_submission(merged_prediction_array, OUTPUT_PATH + 'submission/submission30.csv', threshold=0.30)
+        utils.write_submission(merged_prediction_array, OUTPUT_PATH + 'submission/submission35.csv', threshold=0.35)
+        utils.write_submission(merged_prediction_array, OUTPUT_PATH + 'submission/submission40.csv', threshold=0.40)
+        utils.write_submission(merged_prediction_array, OUTPUT_PATH + 'submission/submission45.csv', threshold=0.45)
+        utils.write_submission(merged_prediction_array, OUTPUT_PATH + 'submission/submission50.csv', threshold=0.50)
+        utils.write_submission(merged_prediction_array, OUTPUT_PATH + 'submission/submission55.csv', threshold=0.55)
+
 
 
 if __name__ == '__main__':

@@ -120,3 +120,42 @@ def batch_norm(x, n_out, phase_train, parent_name):
                             lambda: (ema.average(batch_mean), ema.average(batch_var)))
         normed = tf.nn.batch_normalization(x, mean, var, beta, gamma, 1e-3)
         return normed
+
+
+
+
+
+
+
+
+
+
+
+
+
+def write_submission(merged_pred_array, save_path, threshold):
+    """Converts images into a submission file"""
+    with open(save_path, 'w') as f:
+        f.write('id,prediction\n')
+        for index, img in enumerate(merged_pred_array):
+            f.writelines('{}\n'.format(s) for s in mask_to_submission_strings(img, index+1, threshold))
+
+
+# assign a label to a patch
+def patch_to_label(patch, threshold):
+    foreground_threshold = threshold # percentage of pixels > 1 required to assign a foreground label to a patch
+    df = np.mean(patch)
+    if df > foreground_threshold:
+        return 1
+    else:
+        return 0
+
+
+def mask_to_submission_strings(img, img_number, threshold):
+    """Reads a single image and outputs the strings that should go into the submission file"""
+    patch_size = 16
+    for j in range(0, img.shape[1], patch_size):
+        for i in range(0, img.shape[0], patch_size):
+            patch = img[i:i + patch_size, j:j + patch_size]
+            label = patch_to_label(patch, threshold)
+            yield("{:03d}_{}_{},{}".format(img_number, j, i, label))
