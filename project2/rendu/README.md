@@ -22,6 +22,10 @@ Put the satellite images of the training set in the data/training/images folder 
 
 This is where the satellite images from the test set should be put.
 
+#### test_set_good_format
+
+Used by test_set_formatting.py
+
 ### submitted_conv_net_model
 
 Contains the precomputed results that are utilized to create the Kaggle submission in csv format.
