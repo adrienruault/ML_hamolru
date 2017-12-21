@@ -1,9 +1,5 @@
 # Machine Learning Project: Road Segmentation
 
-## Data filtering
-
-The outliers have been replaced by 0 for all the data : test and training sets. 
-
 ## Parameters
 
 Our submission has been ran with the following parameters : 
@@ -25,6 +21,10 @@ Put the satellite images of the training set in the data/training/images folder 
 #### data/test_set_images
 
 This is where the satellite images from the test set should be put.
+
+### submitted_conv_net_model
+
+Contains the precomputed results that are utilized to create the Kaggle submission in csv format.
 
 ### run.py
 
